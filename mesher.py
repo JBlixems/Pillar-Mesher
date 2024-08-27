@@ -101,8 +101,15 @@ def mesh_area(max_area):
     )
 
     # Create Data directory if it doesn't exist
-    if not os.path.exists("Data/Mesh"):
-        os.makedirs("Data/Mesh")
+    mesh_dir = "Data/Mesh"
+
+    if os.path.exists(mesh_dir):
+        with os.scandir(mesh_dir) as entries:
+            for entry in entries:
+                if entry.is_file():
+                    os.remove(entry.path)
+    else:
+        os.makedirs(mesh_dir)
 
     # Create text files for each hole
     hole_files = [open(f"Data/Mesh/P{i+1}.txt", "a") for i in range(len(holes))]
@@ -141,7 +148,6 @@ def mesh_area(max_area):
                     f"{triangle_points[1][0]:.4f} {triangle_points[1][1]:.4f} "
                     f"{triangle_points[2][0]:.4f} {triangle_points[2][1]:.4f}\n"
                 )
-
 
     plt.gca().set_aspect('equal')
     plt.ion()

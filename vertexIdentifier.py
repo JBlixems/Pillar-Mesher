@@ -3,6 +3,7 @@ import cv2
 from tkinter import Tk, filedialog, simpledialog
 from mesher import mesh_area
 import os
+import concurrent.futures
 
 # Function to find polygons based on the provided thresholds and epsilon factor
 def find_polygons(image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01):
@@ -103,7 +104,7 @@ image1 = cv2.imread("Example/layout.png")
 
 # Create a window to display the results
 cv2.namedWindow('Polygons', cv2.WINDOW_NORMAL)
-cv2.resizeWindow('Polygons', 1920, 1080)
+cv2.setWindowProperty('Polygons', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
 
 # Create trackbars (sliders)
 cv2.createTrackbar('Epsilon', 'Polygons', 100, 1000, update_image)
@@ -124,4 +125,5 @@ while True:
     elif key == ord('m'):
         max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
         if max_area is not None:
-            mesh_area(max_area)
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.submit(mesh_area, max_area)
