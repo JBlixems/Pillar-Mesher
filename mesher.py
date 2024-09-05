@@ -2,6 +2,11 @@ import triangle
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import threading
+import tkinter as tk
+from tkinter import ttk
+
+loadingBarSize = 200
 
 # Function to read vertices from a file
 def read_vertices_from_file(filename):
@@ -35,7 +40,28 @@ def is_point_in_polygon(point, polygon):
         p1x, p1y = p2x, p2y
     return inside
 
-def mesh_area(max_area):
+# Function to run mesh_area in a separate thread and pass the parameter
+def run_mesh_area(window, progress, mesh_data):
+    thread = threading.Thread(target=mesh_area, args=(mesh_data, progress, window))
+    thread.start()
+    thread.join()
+    window.destroy()
+
+# Function to create a loading popup with a progress bar
+def show_loading_screen(mesh_data):
+    window = tk.Tk()
+    window.title("Loading")
+    window.geometry("300x100")
+
+    progress = ttk.Progressbar(window, orient="horizontal", length=loadingBarSize, mode="determinate")
+    progress.pack(pady=25)
+
+    # Run the progress bar update and mesh_area function in parallel
+    threading.Thread(target=run_mesh_area, args=(window, progress, mesh_data)).start()
+
+    window.mainloop()
+
+def mesh_area(max_area, progress, window):
     # Read the border vertices
     border_vertices = read_vertices_from_file('Data/border.txt')
 
@@ -116,10 +142,13 @@ def mesh_area(max_area):
 
     # Identify and fill triangles inside each hole with transparent red color
     i = 0
-    print("Triangles: " + str(len(mesh['triangles'])))
+    triangles = len(mesh['triangles'])
+    print("Triangles: " + str(triangles))
     for triangle_indices in mesh['triangles']:
         if(i % 1000 == 0):
             print(i)
+            progress['value'] = (i/triangles)*loadingBarSize  # Update progress bar
+            window.update_idletasks()
 
         i += 1
         # Get the triangle's vertices

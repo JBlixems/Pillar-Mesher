@@ -1,9 +1,11 @@
 import numpy as np
 import cv2
 from tkinter import Tk, filedialog, simpledialog
-from mesher import mesh_area
+from mesher import show_loading_screen
 import os
-import concurrent.futures
+
+# Load the initial image
+image1 = cv2.imread("Example/layout.png")
 
 # Function to find polygons based on the provided thresholds and epsilon factor
 def find_polygons(image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01):
@@ -99,31 +101,33 @@ def save_polygons(pillars=True):
                     actual_y = grid_max_y - (y / height) * grid_max_y
                     f.write(f"{actual_x:.4f} {actual_y:.4f}\n")
 
-# Load the initial image
-image1 = cv2.imread("Example/layout.png")
+if __name__ == "__main__":
+    # Create a window to display the results
+    cv2.namedWindow('Polygons', cv2.WINDOW_NORMAL)
+    cv2.setWindowProperty('Polygons', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
 
-# Create a window to display the results
-cv2.namedWindow('Polygons', cv2.WINDOW_NORMAL)
-cv2.setWindowProperty('Polygons', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
+    # Create trackbars (sliders)
+    cv2.createTrackbar('Epsilon', 'Polygons', 100, 1000, update_image)
 
-# Create trackbars (sliders)
-cv2.createTrackbar('Epsilon', 'Polygons', 100, 1000, update_image)
+    windowClosed = False
 
-while True:
-    key = cv2.waitKey(1)
-    
-    if cv2.getWindowProperty('Polygons', cv2.WND_PROP_VISIBLE) < 1:
-        cv2.destroyAllWindows()
-        break
+    while not windowClosed:
+        key = cv2.waitKey(1)
         
-    if key == ord('u'):
-        upload_image()
-    elif key == ord('p'):
-        save_polygons(pillars=True)
-    elif key == ord('b'):
-        save_polygons(pillars=False)
-    elif key == ord('m'):
-        max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
-        if max_area is not None:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                executor.submit(mesh_area, max_area)
+        if cv2.getWindowProperty('Polygons', cv2.WND_PROP_VISIBLE) < 1:
+            windowClosed = True
+            
+        if key == ord('u'):
+            upload_image()
+
+        elif key == ord('p'):
+            save_polygons(pillars=True)
+
+        elif key == ord('b'):
+            save_polygons(pillars=False)
+
+        elif key == ord('m'):
+            max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
+
+            if max_area is not None:
+                show_loading_screen(max_area)
