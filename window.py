@@ -69,10 +69,19 @@ class Window:
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         polygons = []
+        min_vertex_distance = 10
         for contour in contours:
             epsilon = epsilon_factor * cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, epsilon, True)
-            polygons.append(approx)
+            # polygons.append(approx)
+
+            # Filter vertices based on minimum distance
+            filtered_approx = []
+            for i, vertex in enumerate(approx):
+                if i == 0 or np.linalg.norm(vertex[0] - filtered_approx[-1][0]) > min_vertex_distance:
+                    filtered_approx.append(vertex)
+
+            polygons.append(np.array(filtered_approx))
         
         return polygons
 

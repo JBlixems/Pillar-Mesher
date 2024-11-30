@@ -9,6 +9,7 @@ from tkinter import ttk
 class Mesher:
     PILLAR_TEXT = "E_LT: 'PXXXXXXX';  'ELPLANE';  'SOLID';    ncp = 1; cf = 0.80;   "
     MINED_TEXT = "E_LT: 'MXXXXXXX';  'ELPLANE';  'MINED';    ncp = 1; cf = 0.80;   "
+    
 
     def __init__(self, max_area, loadingBarSize=200):
         self.max_area = max_area
@@ -164,7 +165,7 @@ class Mesher:
         print("Triangles: " + str(triangles))
         for triangle_indices in mesh['triangles']:
             if(i % 1000 == 0):
-                print(i)
+                print(i, f"{i/triangles:.2%}")
                 progress['value'] = (i/triangles)*self.loadingBarSize  # Update progress bar
                 window.update_idletasks()
 
