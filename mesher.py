@@ -1,5 +1,4 @@
 import triangle
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 
@@ -129,14 +128,6 @@ class Mesher:
             mesh = triangle.triangulate(polygon, f"pqa{max_area}")
             mesh = self.enforce_edge_constraint(mesh)
 
-            # Plot the mesh
-            plt.figure()
-
-            # Plot all triangles with default color (black)
-            plt.triplot(
-                mesh['vertices'][:, 0], mesh['vertices'][:, 1], mesh['triangles'], color='gray'
-            )
-
             # Create Data directory if it doesn't exist
             mesh_dir = "Data/Mesh"
             plot_dir = "Data/Plot"
@@ -199,7 +190,6 @@ class Mesher:
                             f"{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f}\n\n"
                         )
 
-                        plt.fill(triangle_points[:, 0], triangle_points[:, 1], color='blue', alpha=0.5)
                         break
 
                 if not inside_hole:
@@ -226,9 +216,6 @@ class Mesher:
                     window.update_idletasks()
             
             window.destroy()
-            plt.gca().set_aspect('equal')
-            plt.ion()
-            plt.show(block=True)
 
         except Exception as e:
             print(e)
@@ -236,12 +223,12 @@ class Mesher:
             return
         
         finally:
-            window.destroy()
-
             # Close the files
             for f in hole_files:
                 f.close()
             for f in hole_plot_files:
                 f.close()
+                
+            window.destroy()
         
         

@@ -1,10 +1,12 @@
 import numpy as np
 import cv2
+import os
 from tkinter import Tk, Scale, HORIZONTAL, Canvas, filedialog, simpledialog, Menu, ttk
 from PIL import Image, ImageTk
-from loading import MeshLoader
+from loader import MeshLoader
 from mesher import Mesher
-import os
+from plotter import Plotter
+
 
 class Window:
     def __init__(self):
@@ -12,34 +14,32 @@ class Window:
         self.polygons = []
         self.epsilon_factor = 0.01
         self.canvas_image = None
-        self.font = ("Helvetica", 14)
 
         # Create the main Tkinter window
         self.root = Tk()
         self.root.title("Image Processing with Polygons")
         self.root.state('zoomed')
 
-        self.mesher = Mesher()
-
         # Create a menu bar
-        menu_bar = Menu(font=self.font)
+        menu_bar = Menu()
 
         # File Menu
-        file_menu = Menu(menu_bar, tearoff=0, font=self.font)
+        file_menu = Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="New Project", command=self.new_project)
         file_menu.add_command(label="Open Project", command=self.open_project)
         file_menu.add_command(label="Upload Image", command=self.upload_image)
-        menu_bar.add_cascade(label="File", menu=file_menu, font=self.font)
+        menu_bar.add_cascade(label="File", menu=file_menu)
 
         # Save Menu
-        save_menu = Menu(menu_bar, tearoff=0, font=self.font)
+        save_menu = Menu(menu_bar, tearoff=0)
         save_menu.add_command(label="Save Outline", command=self.save_outline)
         save_menu.add_command(label="Save Pillars", command=self.save_pillars)
-        menu_bar.add_cascade(label="Save", menu=save_menu, font=self.font)
+        menu_bar.add_cascade(label="Save", menu=save_menu)
 
         # Mesh Menu
-        mesh_menu = Menu(menu_bar, tearoff=0, font=self.font)
+        mesh_menu = Menu(menu_bar, tearoff=0)
         mesh_menu.add_command(label="Mesh Files", command=self.mesh_files)
+        mesh_menu.add_command(label="Plot Files", command=self.plot_files)
         menu_bar.add_cascade(label="Mesh", menu=mesh_menu)
 
         # Attach the menu bar to the root window
@@ -164,15 +164,6 @@ class Window:
                     actual_y = grid_max_y - (y / height) * grid_max_y
                     print(f"{actual_x:.4f} {actual_y:.4f}")
                     f.write(f"{actual_x:.4f} {actual_y:.4f}\n")
-    
-    # Function to mesh the image
-    def mesh_image(self):
-        max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
-        if max_area is not None:
-            mesh_loader = MeshLoader(self.root, self.mesher.mesh_area)
-
-            mesh_loader.start_loading()
-            mesh_loader.start_meshing(max_area)
 
     def new_project(self):
         print("New Project selected")
@@ -191,7 +182,17 @@ class Window:
         self.save_polygons(pillars=True)
 
     def mesh_files(self):
-        self.mesh_image()
+        mesher = Mesher()
+        max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
+        if max_area is not None:
+            mesh_loader = MeshLoader(self.root, mesher.mesh_area)
+
+            mesh_loader.start_loading()
+            mesh_loader.start_meshing(max_area)
+
+    def plot_files(self):
+        plotter = Plotter()
+        plotter.run_plotter()
 
     def initialize_canvas(self):
         # Update the Tkinter window to ensure dimensions are available
