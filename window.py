@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from tkinter import Tk, Scale, HORIZONTAL, Canvas, filedialog, simpledialog, Menu, ttk
 from PIL import Image, ImageTk
+from loading import MeshLoader
 from mesher import Mesher
 import os
 
@@ -17,6 +18,8 @@ class Window:
         self.root = Tk()
         self.root.title("Image Processing with Polygons")
         self.root.state('zoomed')
+
+        self.mesher = Mesher()
 
         # Create a menu bar
         menu_bar = Menu(font=self.font)
@@ -53,6 +56,7 @@ class Window:
         self.initialize_canvas()
         self.update_image()
 
+        self.root.protocol("WM_DELETE_WINDOW", self.root.quit)
         # Start the Tkinter main loop
         self.root.mainloop()
 
@@ -93,7 +97,6 @@ class Window:
         new_height = int(h * scale)
         resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
         return resized_image
-
 
     # Function to update the displayed image
     def update_image(self):
@@ -161,13 +164,15 @@ class Window:
                     actual_y = grid_max_y - (y / height) * grid_max_y
                     print(f"{actual_x:.4f} {actual_y:.4f}")
                     f.write(f"{actual_x:.4f} {actual_y:.4f}\n")
-
+    
     # Function to mesh the image
     def mesh_image(self):
         max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
         if max_area is not None:
-            m = Mesher(max_area)
-            m.mesh()
+            mesh_loader = MeshLoader(self.root, self.mesher.mesh_area)
+
+            mesh_loader.start_loading()
+            mesh_loader.start_meshing(max_area)
 
     def new_project(self):
         print("New Project selected")
