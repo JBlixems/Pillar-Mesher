@@ -7,9 +7,20 @@ from loader import MeshLoader
 from mesher import Mesher
 from plotter import Plotter
 
-
 class Window:
+    DATA_FOLDER_NAME = "Data"
+    MESH_FOLDER_NAME = "Mesh"
+    PLOT_FOLDER_NAME = "Plot"
+
+    BORDER_VERTEX_FILE_NAME = "border.dat"
+    PILLAR_VERTEX_FILE_NAME = "pillars.dat"
+
+    PILLAR_OUTPUT_FILENAME_START = "p"
+    MINED_OUTPUT_FILENAME_START = "M"
+
     def __init__(self):
+        self.project_path = os.getcwd()
+        print("Project path:", self.project_path)
         self.image1 = cv2.imread("Example/layout.png")
         self.polygons = []
         self.epsilon_factor = 0.01
@@ -19,6 +30,7 @@ class Window:
         self.root = Tk()
         self.root.title("Image Processing with Polygons")
         self.root.state('zoomed')
+        self.root.bind("<Configure>", self.on_window_resize)
 
         # Create a menu bar
         menu_bar = Menu()
@@ -27,6 +39,7 @@ class Window:
         file_menu = Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="New Project", command=self.new_project)
         file_menu.add_command(label="Open Project", command=self.open_project)
+        file_menu.add_separator()
         file_menu.add_command(label="Upload Image", command=self.upload_image)
         menu_bar.add_cascade(label="File", menu=file_menu)
 
@@ -46,7 +59,7 @@ class Window:
         self.root.config(menu=menu_bar)
 
         # Add a slider for epsilon factor
-        self.epsilon_slider = Scale(self.root, from_=1, to=1000, orient=HORIZONTAL, label="Epsilon Factor", command=lambda x: self.update_image(), length=400, showvalue=0)
+        self.epsilon_slider = Scale(self.root, from_=1, to=1000, orient=HORIZONTAL, label="Vertex Sensitivity Factor", command=lambda x: self.update_image(), length=400, showvalue=0)
         self.epsilon_slider.pack(side="top")
 
         # Create a canvas to display the image
@@ -56,9 +69,20 @@ class Window:
         self.initialize_canvas()
         self.update_image()
 
-        self.root.protocol("WM_DELETE_WINDOW", self.root.quit)
+        self.root.protocol("WM_DELETE_WINDOW", self.quit_application)
         # Start the Tkinter main loop
         self.root.mainloop()
+
+    def on_window_resize(self, event):
+        """Handle window resize events."""
+        if hasattr(self, '_last_size'):
+            # Avoid redundant updates if the size hasn't changed
+            if self._last_size == (event.width, event.height):
+                return
+        self._last_size = (event.width, event.height)
+        
+        # Update the canvas and the image
+        self.update_image()
 
     # Function to find polygons based on the provided thresholds and epsilon factor
     def find_polygons(self, image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01):
@@ -97,6 +121,9 @@ class Window:
         new_height = int(h * scale)
         resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
         return resized_image
+
+    def quit_application(self):
+        self.root.destroy()
 
     # Function to update the displayed image
     def update_image(self):
@@ -141,6 +168,15 @@ class Window:
             self.image1 = cv2.imread(file_path)
             self.update_image()
 
+    def _get_data_folder_path(self):
+        return f"{self.project_path}/{self.DATA_FOLDER_NAME}"
+    
+    def _get_mesh_folder_path(self):
+        return f"{self._get_data_folder_path()}/{self.MESH_FOLDER_NAME}"
+    
+    def _get_plot_folder_path(self):
+        return f"{self._get_data_folder_path()}/{self.PLOT_FOLDER_NAME}"
+
     # Function to save polygons to a text file
     def save_polygons(self, pillars=True):
         grid_max_x = simpledialog.askinteger("Input", "Enter max grid X:")
@@ -150,14 +186,14 @@ class Window:
             print("Failed to get x and y grid values")
             return 
         
-        if not os.path.exists("Data"):
-            os.makedirs("Data")
+        if not os.path.exists(self._get_data_folder_path()):
+            os.makedirs(self._get_data_folder_path())
 
         height, width = self.image1.shape[:2]
-        filename = "Data/pillars.dat" if pillars else "Data/border.dat"
+        filename = f"{self._get_data_folder_path}/{self.PILLAR_VERTEX_FILE_NAME}" if pillars else f"{self._get_data_folder_path}/{self.BORDER_VERTEX_FILE_NAME}"
         with open(filename, "w") as f:
             for i, polygon in enumerate(self.polygons):
-                f.write(f"{'P' if pillars else 'M'}{i+1}\n")
+                f.write(f"{self.PILLAR_OUTPUT_FILENAME_START if pillars else self.MINED_OUTPUT_FILENAME_START}{i+1}\n")
                 for point in polygon:
                     x, y = point[0]
                     actual_x = (x / width) * grid_max_x
@@ -187,7 +223,6 @@ class Window:
         if max_area is not None:
             mesh_loader = MeshLoader(self.root, mesher.mesh_area)
 
-            mesh_loader.start_loading()
             mesh_loader.start_meshing(max_area)
 
     def plot_files(self):

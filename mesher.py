@@ -151,6 +151,8 @@ class Mesher:
             # Create text files for each hole
             hole_files = [open(f"Data/Mesh/P{i+1}.tri", "a") for i in range(len(holes))]
             hole_plot_files = [open(f"Data/Plot/P{i+1}.plt", "a") for i in range(len(holes))]
+            mined_file = open("Data/Mesh/M1.tri", "a")
+            mined_plot_file = open("Data/Plot/M1.plt", "a")
             hole_counter = [1] * (len(holes) + 1)
             m_counter = 1
 
@@ -193,42 +195,42 @@ class Mesher:
                         break
 
                 if not inside_hole:
-                    with open("Data/Mesh/M1.tri", "a") as f:
-                        el_name = "01" + f"{m_counter:05}"
-                        m_counter += 1
-                        f.write(
-                            f"{self.MINED_TEXT.replace('XXXXXXX', el_name)}{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f} "
-                            f"{triangle_points[1][0]:.4f} {triangle_points[1][1]:.4f} "
-                            f"{triangle_points[2][0]:.4f} {triangle_points[2][1]:.4f}\n"
-                        )
-                    
-                    with open("Data/Plot/M1.plt", "a") as f:
-                        f.write(
-                            f"{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f}\n"
-                            f"{triangle_points[1][0]:.4f} {triangle_points[1][1]:.4f}\n"
-                            f"{triangle_points[2][0]:.4f} {triangle_points[2][1]:.4f}\n"
-                            f"{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f}\n\n"
-                        )   
+                    el_name = "01" + f"{m_counter:05}"
+                    m_counter += 1
+                    mined_file.write(
+                        f"{self.MINED_TEXT.replace('XXXXXXX', el_name)}{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f} "
+                        f"{triangle_points[1][0]:.4f} {triangle_points[1][1]:.4f} "
+                        f"{triangle_points[2][0]:.4f} {triangle_points[2][1]:.4f}\n"
+                    )
+                
+                    mined_plot_file.write(
+                        f"{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f}\n"
+                        f"{triangle_points[1][0]:.4f} {triangle_points[1][1]:.4f}\n"
+                        f"{triangle_points[2][0]:.4f} {triangle_points[2][1]:.4f}\n"
+                        f"{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f}\n\n"
+                    )   
 
                 if(i % 100 == 0):
                     print(i, f"{i/self.triangles:.2%}")
                     progress['value'] = (i/self.triangles)*100  # Update progress bar
-                    window.update_idletasks()
             
-            window.destroy()
-
-        except Exception as e:
-            print(e)
-            label["text"] = "Error occurred while meshing"
-            return
-        
-        finally:
-            # Close the files
             for f in hole_files:
                 f.close()
             for f in hole_plot_files:
-                f.close()
-                
-            window.destroy()
+                f.close()  
+
+        except Exception as e:
+            print(e)
+            return
         
+        finally:
+            window.destroy()
+            mined_file.close()
+            mined_plot_file.close()
+            for f in hole_files:
+                f.close()
+            for f in hole_plot_files:
+                f.close()  
+            
+            print("Exited the mesh generator and closed all files")
         
