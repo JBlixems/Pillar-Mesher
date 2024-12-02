@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from threading import Thread
-
+from constants import MINED_OUTPUT_FILENAME_START, ELEMENT_FILE_EXT
 
 class Plotter:
     def __init__(self, folder_path="Data/Mesh"):
@@ -36,10 +36,10 @@ class Plotter:
         """Reads all .tri files in the folder and organizes them by color."""
         mesh_data = []
         for filename in os.listdir(self.folder_path):
-            if filename.endswith(".tri"):
+            if filename.endswith(f".{ELEMENT_FILE_EXT}"):
                 file_path = os.path.join(self.folder_path, filename)
                 mesh = self.read_file(file_path)
-                color = "gray" if filename.startswith("M1") else "blue"
+                color = "gray" if filename.startswith(MINED_OUTPUT_FILENAME_START) else "blue"
                 mesh_data.append((mesh, color))
         return mesh_data
 

@@ -1,14 +1,13 @@
 import triangle
 import numpy as np
 import os
+from constants import *
 
 class Mesher:
-    PILLAR_TEXT = "E_LT: 'PXXXXXXX';  'ELPLANE';  'SOLID';    ncp = 1; cf = 0.80;   "
-    MINED_TEXT = "E_LT: 'MXXXXXXX';  'ELPLANE';  'MINED';    ncp = 1; cf = 0.80;   "
-
-    def __init__(self):
+    def __init__(self, project_path):
         self.triangles = 0
         self.stop_thread = False
+        self.project_path = project_path
 
     # Function to read vertices from a file
     def read_vertices_from_file(self, filename):
@@ -16,7 +15,7 @@ class Mesher:
         with open(filename, 'r') as file:
             lines = file.readlines()
             for line in lines:
-                if line.strip().startswith('M') or line.strip().startswith('P'):
+                if line.strip().startswith(MINED_OUTPUT_FILENAME_START) or line.strip().startswith(PILLAR_OUTPUT_FILENAME_START):
                     continue
                 parts = line.strip().split()
                 if len(parts) == 2:
@@ -78,9 +77,9 @@ class Mesher:
         hole_plot_files = []        
         try:
             # Read the border vertices
-            border_vertices = self.read_vertices_from_file('Data/border.dat')
+            border_vertices = self.read_vertices_from_file(f"{self.project_path}/{DATA_FOLDER_NAME}/{BORDER_VERTEX_FILE_NAME}")
 
-            with open('Data/pillars.dat', 'r') as file:
+            with open(f"{self.project_path}/{DATA_FOLDER_NAME}/{PILLAR_VERTEX_FILE_NAME}", 'r') as file:
                 lines = file.readlines()
                 for line in lines:
                     if line.strip().startswith('P'):
@@ -129,8 +128,8 @@ class Mesher:
             mesh = self.enforce_edge_constraint(mesh)
 
             # Create Data directory if it doesn't exist
-            mesh_dir = "Data/Mesh"
-            plot_dir = "Data/Plot"
+            mesh_dir = f"{self.project_path}/{DATA_FOLDER_NAME}/{MESH_FOLDER_NAME}"
+            plot_dir = f"{self.project_path}/{DATA_FOLDER_NAME}/{PLOT_FOLDER_NAME}"
 
             if os.path.exists(mesh_dir):
                 with os.scandir(mesh_dir) as entries:
@@ -149,10 +148,10 @@ class Mesher:
                 os.makedirs(plot_dir)
 
             # Create text files for each hole
-            hole_files = [open(f"Data/Mesh/P{i+1}.tri", "a") for i in range(len(holes))]
-            hole_plot_files = [open(f"Data/Plot/P{i+1}.plt", "a") for i in range(len(holes))]
-            mined_file = open("Data/Mesh/M1.tri", "a")
-            mined_plot_file = open("Data/Plot/M1.plt", "a")
+            hole_files = [open(f"{mesh_dir}/{PILLAR_OUTPUT_FILENAME_START}{i+1}.{ELEMENT_FILE_EXT}", "a") for i in range(len(holes))]
+            hole_plot_files = [open(f"{plot_dir}/{PILLAR_OUTPUT_FILENAME_START}{i+1}.{PLOT_FILE_EXT}", "a") for i in range(len(holes))]
+            mined_file = open(f"{mesh_dir}/{MINED_OUTPUT_FILENAME_START}1.{ELEMENT_FILE_EXT}", "a")
+            mined_plot_file = open(f"{plot_dir}/{MINED_OUTPUT_FILENAME_START}1.{PLOT_FILE_EXT}", "a")
             hole_counter = [1] * (len(holes) + 1)
             m_counter = 1
 
@@ -180,7 +179,7 @@ class Mesher:
                         el_name = f"{(j + 1):02}" + f"{hole_counter[j]:05}"
                         hole_counter[j] += 1
                         hole_files[j].write(
-                            f"{self.PILLAR_TEXT.replace('XXXXXXX', el_name)}{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f} "
+                            f"{PILLAR_TEXT.replace('XXXXXXX', el_name)}{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f} "
                             f"{triangle_points[1][0]:.4f} {triangle_points[1][1]:.4f} "
                             f"{triangle_points[2][0]:.4f} {triangle_points[2][1]:.4f}\n"
                         )
@@ -198,7 +197,7 @@ class Mesher:
                     el_name = "01" + f"{m_counter:05}"
                     m_counter += 1
                     mined_file.write(
-                        f"{self.MINED_TEXT.replace('XXXXXXX', el_name)}{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f} "
+                        f"{MINED_TEXT.replace('XXXXXXX', el_name)}{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f} "
                         f"{triangle_points[1][0]:.4f} {triangle_points[1][1]:.4f} "
                         f"{triangle_points[2][0]:.4f} {triangle_points[2][1]:.4f}\n"
                     )

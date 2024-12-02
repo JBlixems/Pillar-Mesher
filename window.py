@@ -6,18 +6,9 @@ from PIL import Image, ImageTk
 from loader import MeshLoader
 from mesher import Mesher
 from plotter import Plotter
+from constants import *
 
 class Window:
-    DATA_FOLDER_NAME = "Data"
-    MESH_FOLDER_NAME = "Mesh"
-    PLOT_FOLDER_NAME = "Plot"
-
-    BORDER_VERTEX_FILE_NAME = "border.dat"
-    PILLAR_VERTEX_FILE_NAME = "pillars.dat"
-
-    PILLAR_OUTPUT_FILENAME_START = "p"
-    MINED_OUTPUT_FILENAME_START = "M"
-
     def __init__(self):
         self.project_path = os.getcwd()
         print("Project path:", self.project_path)
@@ -169,13 +160,13 @@ class Window:
             self.update_image()
 
     def _get_data_folder_path(self):
-        return f"{self.project_path}/{self.DATA_FOLDER_NAME}"
+        return f"{self.project_path}/{DATA_FOLDER_NAME}"
     
     def _get_mesh_folder_path(self):
-        return f"{self._get_data_folder_path()}/{self.MESH_FOLDER_NAME}"
+        return f"{self._get_data_folder_path()}/{MESH_FOLDER_NAME}"
     
     def _get_plot_folder_path(self):
-        return f"{self._get_data_folder_path()}/{self.PLOT_FOLDER_NAME}"
+        return f"{self._get_data_folder_path()}/{PLOT_FOLDER_NAME}"
 
     # Function to save polygons to a text file
     def save_polygons(self, pillars=True):
@@ -190,15 +181,14 @@ class Window:
             os.makedirs(self._get_data_folder_path())
 
         height, width = self.image1.shape[:2]
-        filename = f"{self._get_data_folder_path}/{self.PILLAR_VERTEX_FILE_NAME}" if pillars else f"{self._get_data_folder_path}/{self.BORDER_VERTEX_FILE_NAME}"
+        filename = f"{self._get_data_folder_path()}/{PILLAR_VERTEX_FILE_NAME}" if pillars else f"{self._get_data_folder_path()}/{BORDER_VERTEX_FILE_NAME}"
         with open(filename, "w") as f:
             for i, polygon in enumerate(self.polygons):
-                f.write(f"{self.PILLAR_OUTPUT_FILENAME_START if pillars else self.MINED_OUTPUT_FILENAME_START}{i+1}\n")
+                f.write(f"{PILLAR_OUTPUT_FILENAME_START if pillars else MINED_OUTPUT_FILENAME_START}{i+1}\n")
                 for point in polygon:
                     x, y = point[0]
                     actual_x = (x / width) * grid_max_x
                     actual_y = grid_max_y - (y / height) * grid_max_y
-                    print(f"{actual_x:.4f} {actual_y:.4f}")
                     f.write(f"{actual_x:.4f} {actual_y:.4f}\n")
 
     def new_project(self):
@@ -206,9 +196,10 @@ class Window:
         # Your new project functionality here
 
     def open_project(self):
-        file_path = filedialog.askopenfilename(title="Open Project", filetypes=[("Project files", "*.proj")])
-        if file_path:
-            print(f"Opening project from {file_path}")
+        folder_path = filedialog.askdirectory(title="Open Project Folder")
+        if folder_path:
+            self.project_path = folder_path
+            print(f"Opening project from {folder_path}")
             # Add logic to open the project
 
     def save_outline(self):
@@ -218,7 +209,7 @@ class Window:
         self.save_polygons(pillars=True)
 
     def mesh_files(self):
-        mesher = Mesher()
+        mesher = Mesher(self.project_path)
         max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
         if max_area is not None:
             mesh_loader = MeshLoader(self.root, mesher.mesh_area)
@@ -226,7 +217,8 @@ class Window:
             mesh_loader.start_meshing(max_area)
 
     def plot_files(self):
-        plotter = Plotter()
+        folder_path = self._get_mesh_folder_path()
+        plotter = Plotter(folder_path)
         plotter.run_plotter()
 
     def initialize_canvas(self):

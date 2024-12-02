@@ -1,0 +1,17 @@
+# Constants
+
+DATA_FOLDER_NAME = "Data"
+MESH_FOLDER_NAME = "Mesh"
+PLOT_FOLDER_NAME = "Plot"
+
+BORDER_VERTEX_FILE_NAME = "border.dat"
+PILLAR_VERTEX_FILE_NAME = "pillars.dat"
+
+PILLAR_OUTPUT_FILENAME_START = "p"
+MINED_OUTPUT_FILENAME_START = "M"
+
+ELEMENT_FILE_EXT = "tri"
+PLOT_FILE_EXT = "plt"
+
+PILLAR_TEXT = "E_LT: 'PXXXXXXX';  'ELPLANE';  'SOLID';    ncp = 1; cf = 0.80;   "
+MINED_TEXT = "E_LT: 'MXXXXXXX';  'ELPLANE';  'MINED';    ncp = 1; cf = 0.80;   "
