@@ -74,9 +74,9 @@ class Window:
         self._last_size = (event.width, event.height)
         
         # Update the canvas and the image
+        self.canvas.size = (event.width, event.height)
         self.update_image()
 
-    # Function to find polygons based on the provided thresholds and epsilon factor
     def find_polygons(self, image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -149,8 +149,14 @@ class Window:
         image_pil = Image.fromarray(resized_image)
         image_tk = ImageTk.PhotoImage(image_pil)
 
+        # Calculate offsets to center the image on the canvas
+        image_width, image_height = resized_image.shape[1], resized_image.shape[0]
+        x_offset = (canvas_width - image_width) // 2
+        y_offset = (canvas_height - image_height) // 2
+
         # Update the canvas
         self.canvas.itemconfig(self.canvas_image, image=image_tk)
+        self.canvas.coords(self.canvas_image, x_offset, y_offset)
         self.canvas.image = image_tk  # Store reference to avoid garbage collection
 
     # Function to upload a new image
@@ -244,12 +250,15 @@ class Window:
         image_pil = Image.fromarray(resized_image)
         image_tk = ImageTk.PhotoImage(image_pil)
 
-        frame = ttk.Frame(self.root)
-        frame.pack(padx=10, pady=10)
+        # Calculate offsets to center the image on the canvas
+        image_width, image_height = resized_image.shape[1], resized_image.shape[0]
+        x_offset = (canvas_width - image_width) // 2
+        y_offset = (canvas_height - image_height) // 2
 
-        # Display the image on the canvas
-        self.canvas_image = self.canvas.create_image(0, 0, anchor="nw", image=image_tk)
+        # Display the image on the canvas, centered
+        self.canvas_image = self.canvas.create_image(x_offset, y_offset, anchor="nw", image=image_tk)
         self.canvas.image = image_tk  # Store reference to avoid garbage collection
+
 
 
 if __name__ == "__main__":
