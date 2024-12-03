@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import os
-from tkinter import Tk, Scale, HORIZONTAL, Canvas, filedialog, simpledialog, Menu, ttk
+from tkinter import Tk, Scale, HORIZONTAL, Canvas, filedialog, simpledialog, Menu, Label, Frame, font
 from PIL import Image, ImageTk
 from loadingDialog import MeshLoader
 from mesher import Mesher
@@ -13,16 +13,23 @@ class Window:
     def __init__(self):
         self.project_path = os.getcwd()
         print("Project path:", self.project_path)
-        self.image1 = cv2.imread(os.path.join("Example", "layout.png"))
+        self.image1 = cv2.imread(os.path.join("Assets", "layout.png"))
         self.polygons = []
-        self.epsilon_factor = 0.01
         self.canvas_image = None
+        self.pillar_image = None
 
         # Create the main Tkinter window
         self.root = Tk()
-        self.root.title("Image Processing with Polygons")
+        self.root.title("PolyMesh - Polygon Mesh Generator")
         self.root.state('zoomed')
         self.root.bind("<Configure>", self.on_window_resize)
+
+        # Load logo
+        logo_image = Image.open(os.path.join("Assets", "Logo.png")) 
+        logo_photo = ImageTk.PhotoImage(logo_image)
+
+        # Set the window icon
+        self.root.iconphoto(True, logo_photo)
 
         # Create a menu bar
         menu_bar = Menu()
@@ -37,22 +44,44 @@ class Window:
 
         # Save Menu
         save_menu = Menu(menu_bar, tearoff=0)
-        save_menu.add_command(label="Save Outline", command=self.save_outline)
+        save_menu.add_command(label="Save Border", command=self.save_outline)
         save_menu.add_command(label="Save Pillars", command=self.save_pillars)
         menu_bar.add_cascade(label="Save", menu=save_menu)
 
         # Mesh Menu
         mesh_menu = Menu(menu_bar, tearoff=0)
         mesh_menu.add_command(label="Mesh Files", command=self.mesh_files)
-        mesh_menu.add_command(label="Plot Files", command=self.plot_files)
+        mesh_menu.add_command(label="Plot Mesh", command=self.plot_files)
         menu_bar.add_cascade(label="Mesh", menu=mesh_menu)
 
         # Attach the menu bar to the root window
         self.root.config(menu=menu_bar)
 
-        # Add a slider for epsilon factor
-        self.epsilon_slider = Scale(self.root, from_=1, to=1000, orient=HORIZONTAL, label="Vertex Sensitivity Factor", command=lambda x: self.update_image(), length=400, showvalue=0)
-        self.epsilon_slider.pack(side="top")
+        # Create a frame for the toolbar
+        color = "#e6e6e6"
+        self.toolbar = Frame(self.root, bg=color, padx=10, pady=10)
+        self.toolbar.pack(side="top", fill="x", anchor="n")
+
+        # Display the current working directory
+        self.current_directory_label = Label(self.toolbar, text=f"Project: {os.path.split(self.project_path)[-1]}", anchor="w", bg="#3a3a3a", fg="#ffffff", font=("Helvetica", 12, "italic"))
+        self.current_directory_label.pack(side="right", padx=5, anchor="ne")
+
+        # Create a frame inside the toolbar for sliders (to center them)
+        self.sliders_frame = Frame(self.toolbar, bg=color)
+        self.sliders_frame.pack(side="top", padx=10)
+
+        # Set font style for the sliders and labels
+        custom_font = font.Font(family="Helvetica", size=12, weight="bold")
+
+        # Add the epsilon slider
+        self.epsilon_slider = Scale(self.sliders_frame, from_=1, to=1000, orient=HORIZONTAL, label="Vertex Sensitivity Factor", command=lambda x: self.update_image(), length=400, showvalue=0,
+                                    bg=color, font=custom_font)
+        self.epsilon_slider.pack(side="left", padx=15)
+
+        # Add the pixel distance slider
+        self.min_distance_slider = Scale(self.sliders_frame, from_=1, to=1000, orient=HORIZONTAL, label="Minimum Vertex Distance", command=lambda x: self.update_image(), length=400, showvalue=0, 
+                                           bg=color, font=custom_font)
+        self.min_distance_slider.pack(side="left", padx=15)
 
         # Create a canvas to display the image
         self.canvas = Canvas(self.root)
@@ -77,7 +106,7 @@ class Window:
         self.canvas.size = (event.width, event.height)
         self.update_image()
 
-    def find_polygons(self, image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01):
+    def find_polygons(self, image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01, min_vertex_distance=0):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         edges = cv2.Canny(blurred, canny_threshold1, canny_threshold2)
@@ -89,7 +118,6 @@ class Window:
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         polygons = []
-        min_vertex_distance = 10
         for contour in contours:
             epsilon = epsilon_factor * cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, epsilon, True)
@@ -120,10 +148,11 @@ class Window:
     # Function to update the displayed image
     def update_image(self):
         epsilon_factor = self.epsilon_slider.get() / 100000.0
+        min_vertex_distance = self.min_distance_slider.get() / 10.0
         image_copy = self.image1.copy()
         
         # Find polygons
-        self.polygons = self.find_polygons(image_copy, epsilon_factor=epsilon_factor)
+        self.polygons = self.find_polygons(image_copy, epsilon_factor=epsilon_factor, min_vertex_distance=min_vertex_distance)
         num_polygons = len(self.polygons)
         num_vertices = sum(len(polygon) for polygon in self.polygons)
 
@@ -143,6 +172,7 @@ class Window:
         canvas_width = self.root.winfo_width()
         canvas_height = self.root.winfo_height()
         image_rgb = cv2.cvtColor(image_copy, cv2.COLOR_BGR2RGB)
+        self.pillar_image = image_rgb
         resized_image = self.resize_image_to_fit_canvas(image_rgb, canvas_width, canvas_height)
 
         # Convert to Tkinter image
@@ -199,6 +229,10 @@ class Window:
                     actual_y = grid_max_y - (y / height) * grid_max_y
                     f.write(f"{actual_x:.4f} {actual_y:.4f}\n")
 
+        # Save current image to the data folder
+        if self.pillar_image:
+            cv2.imwrite(os.path.join(self._get_data_folder_path(), PILLAR_NUMBERS_IMAGE), self.pillar_image)
+
     def new_project(self):
         print("New Project selected")
         # Your new project functionality here
@@ -208,7 +242,7 @@ class Window:
         if folder_path:
             self.project_path = folder_path
             print(f"Opening project from {folder_path}")
-            # Add logic to open the project
+            self.current_directory_label.config(text=f"Project: {os.path.split(self.project_path)[-1]}")
 
     def save_outline(self):
         self.save_polygons(pillars=False)

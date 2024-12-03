@@ -15,3 +15,5 @@ PLOT_FILE_EXT = "plt"
 
 PILLAR_TEXT = "E_LT: 'PXXXXXXX';  'ELPLANE';  'SOLID';    ncp = 1; cf = 0.80;   "
 MINED_TEXT = "E_LT: 'MXXXXXXX';  'ELPLANE';  'MINED';    ncp = 1; cf = 0.80;   "
+
+PILLAR_NUMBERS_IMAGE = "PillarNumbers.png"
