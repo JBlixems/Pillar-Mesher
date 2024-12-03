@@ -3,9 +3,10 @@ import cv2
 import os
 from tkinter import Tk, Scale, HORIZONTAL, Canvas, filedialog, simpledialog, Menu, ttk
 from PIL import Image, ImageTk
-from loader import MeshLoader
+from loadingDialog import MeshLoader
 from mesher import Mesher
-from plotter import Plotter
+from plotDialog import Plotter
+from inputDialog import GridSizeDialog
 from constants import *
 
 class Window:
@@ -170,8 +171,9 @@ class Window:
 
     # Function to save polygons to a text file
     def save_polygons(self, pillars=True):
-        grid_max_x = simpledialog.askinteger("Input", "Enter max grid X:")
-        grid_max_y = simpledialog.askinteger("Input", "Enter max grid Y:")
+        dialog = GridSizeDialog(self.root, title="Grid Size Input")
+        grid_max_x = dialog.grid_max_x
+        grid_max_y = dialog.grid_max_y
         
         if grid_max_x is None or grid_max_y is None:
             print("Failed to get x and y grid values")
