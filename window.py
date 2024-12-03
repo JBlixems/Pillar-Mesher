@@ -12,7 +12,7 @@ class Window:
     def __init__(self):
         self.project_path = os.getcwd()
         print("Project path:", self.project_path)
-        self.image1 = cv2.imread("Example/layout.png")
+        self.image1 = cv2.imread(os.path.join("Example", "layout.png"))
         self.polygons = []
         self.epsilon_factor = 0.01
         self.canvas_image = None
@@ -160,13 +160,13 @@ class Window:
             self.update_image()
 
     def _get_data_folder_path(self):
-        return f"{self.project_path}/{DATA_FOLDER_NAME}"
+        return os.path.join(self.project_path, DATA_FOLDER_NAME)
     
     def _get_mesh_folder_path(self):
-        return f"{self._get_data_folder_path()}/{MESH_FOLDER_NAME}"
+        return os.path.join(self.project_path, DATA_FOLDER_NAME, MESH_FOLDER_NAME)
     
     def _get_plot_folder_path(self):
-        return f"{self._get_data_folder_path()}/{PLOT_FOLDER_NAME}"
+        return os.path.join(self.project_path, DATA_FOLDER_NAME, PLOT_FOLDER_NAME)
 
     # Function to save polygons to a text file
     def save_polygons(self, pillars=True):
@@ -181,7 +181,7 @@ class Window:
             os.makedirs(self._get_data_folder_path())
 
         height, width = self.image1.shape[:2]
-        filename = f"{self._get_data_folder_path()}/{PILLAR_VERTEX_FILE_NAME}" if pillars else f"{self._get_data_folder_path()}/{BORDER_VERTEX_FILE_NAME}"
+        filename = os.path.join(self._get_data_folder_path(), PILLAR_VERTEX_FILE_NAME) if pillars else os.path.join(self._get_data_folder_path(), BORDER_VERTEX_FILE_NAME)
         with open(filename, "w") as f:
             for i, polygon in enumerate(self.polygons):
                 f.write(f"{PILLAR_OUTPUT_FILENAME_START if pillars else MINED_OUTPUT_FILENAME_START}{i+1}\n")

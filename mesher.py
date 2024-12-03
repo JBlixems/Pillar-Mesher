@@ -76,10 +76,13 @@ class Mesher:
         hole_files = []
         hole_plot_files = []        
         try:
-            # Read the border vertices
-            border_vertices = self.read_vertices_from_file(f"{self.project_path}/{DATA_FOLDER_NAME}/{BORDER_VERTEX_FILE_NAME}")
+            border_file = os.path.join(self.project_path, DATA_FOLDER_NAME, BORDER_VERTEX_FILE_NAME)
+            pillar_file = os.path.join(self.project_path, DATA_FOLDER_NAME, PILLAR_VERTEX_FILE_NAME)
 
-            with open(f"{self.project_path}/{DATA_FOLDER_NAME}/{PILLAR_VERTEX_FILE_NAME}", 'r') as file:
+            # Read the border vertices
+            border_vertices = self.read_vertices_from_file(border_file)
+
+            with open(pillar_file, 'r') as file:
                 lines = file.readlines()
                 for line in lines:
                     if line.strip().startswith('P'):
@@ -128,8 +131,8 @@ class Mesher:
             mesh = self.enforce_edge_constraint(mesh)
 
             # Create Data directory if it doesn't exist
-            mesh_dir = f"{self.project_path}/{DATA_FOLDER_NAME}/{MESH_FOLDER_NAME}"
-            plot_dir = f"{self.project_path}/{DATA_FOLDER_NAME}/{PLOT_FOLDER_NAME}"
+            mesh_dir = os.path.join(self.project_path, DATA_FOLDER_NAME, MESH_FOLDER_NAME)
+            plot_dir = os.path.join(self.project_path, DATA_FOLDER_NAME, PLOT_FOLDER_NAME)
 
             if os.path.exists(mesh_dir):
                 with os.scandir(mesh_dir) as entries:
@@ -148,10 +151,10 @@ class Mesher:
                 os.makedirs(plot_dir)
 
             # Create text files for each hole
-            hole_files = [open(f"{mesh_dir}/{PILLAR_OUTPUT_FILENAME_START}{i+1}.{ELEMENT_FILE_EXT}", "a") for i in range(len(holes))]
-            hole_plot_files = [open(f"{plot_dir}/{PILLAR_OUTPUT_FILENAME_START}{i+1}.{PLOT_FILE_EXT}", "a") for i in range(len(holes))]
-            mined_file = open(f"{mesh_dir}/{MINED_OUTPUT_FILENAME_START}1.{ELEMENT_FILE_EXT}", "a")
-            mined_plot_file = open(f"{plot_dir}/{MINED_OUTPUT_FILENAME_START}1.{PLOT_FILE_EXT}", "a")
+            hole_files = [open(os.path.join(mesh_dir, f"{PILLAR_OUTPUT_FILENAME_START}{i+1}.{ELEMENT_FILE_EXT}"), "a") for i in range(len(holes))]
+            hole_plot_files = [open(os.path.join(plot_dir, f"{PILLAR_OUTPUT_FILENAME_START}{i+1}.{PLOT_FILE_EXT}"), "a") for i in range(len(holes))]
+            mined_file = open(os.path.join(mesh_dir, f"{MINED_OUTPUT_FILENAME_START}1.{ELEMENT_FILE_EXT}"), "a")
+            mined_plot_file = open(os.path.join(plot_dir, f"{MINED_OUTPUT_FILENAME_START}1.{PLOT_FILE_EXT}"), "a")
             hole_counter = [1] * (len(holes) + 1)
             m_counter = 1
 

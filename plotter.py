@@ -5,7 +5,7 @@ from threading import Thread
 from constants import MINED_OUTPUT_FILENAME_START, ELEMENT_FILE_EXT
 
 class Plotter:
-    def __init__(self, folder_path="Data/Mesh"):
+    def __init__(self, folder_path):
         self.folder_path = folder_path
 
     def read_file(self, file_path):
@@ -57,7 +57,7 @@ class Plotter:
         plt.xlabel("X")
         plt.ylabel("Y")
         plt.axis("equal")
-        plt.show()
+        plt.show(block=True)
 
     def run_plotter(self):
         """Runs the plotting function in a separate thread."""
