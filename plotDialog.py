@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from threading import Thread
 from constants import MINED_OUTPUT_FILENAME_START, ELEMENT_FILE_EXT
-from PIL import Image, ImageTk
-import tkinter as tk
 
 class Plotter:
     def __init__(self, folder_path):

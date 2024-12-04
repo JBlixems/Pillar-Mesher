@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import simpledialog
+from tkinter import simpledialog, messagebox
 
 class GridSizeDialog(simpledialog.Dialog):
     def __init__(self, parent, title=None):
@@ -17,6 +17,15 @@ class GridSizeDialog(simpledialog.Dialog):
         self.entry_y.grid(row=1, column=1, padx=5, pady=5)
 
         return self.entry_x  # Initial focus
+
+    def validate(self):
+        x = self.entry_x.get().strip()
+        y = self.entry_y.get().strip()
+        if not x and not isinstance(x, float) and not y and not isinstance(y, float):
+            messagebox.showerror("Error", "Make sure both values are decimal numbers!")
+            return False
+
+        return True
 
     def apply(self):
         try:

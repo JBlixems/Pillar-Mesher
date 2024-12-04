@@ -6,8 +6,10 @@ from PIL import Image, ImageTk
 from loadingDialog import MeshLoader
 from mesher import Mesher
 from plotDialog import Plotter
-from inputDialog import GridSizeDialog
+from gridSizeDialog import GridSizeDialog
+from newProjectDialog import NewProjectDialog
 from constants import *
+import subprocess
 
 class Window:
     def __init__(self):
@@ -63,7 +65,8 @@ class Window:
         self.toolbar.pack(side="top", fill="x", anchor="n")
 
         # Display the current working directory
-        self.current_directory_label = Label(self.toolbar, text=f"Project: {os.path.split(self.project_path)[-1]}", anchor="w", bg="#3a3a3a", fg="#ffffff", font=("Helvetica", 12, "italic"))
+        self.current_directory_label = Label(self.toolbar, text=f"Project: {os.path.split(self.project_path)[-1]}", anchor="w", bg="#3a3a3a", fg="#ffffff", font=("Helvetica", 12, "italic"), cursor="hand2")
+        self.current_directory_label.bind("<Button-1>", self.open_project_path)
         self.current_directory_label.pack(side="right", padx=5, anchor="ne")
 
         # Create a frame inside the toolbar for sliders (to center them)
@@ -93,6 +96,12 @@ class Window:
         self.root.protocol("WM_DELETE_WINDOW", self.quit_application)
         # Start the Tkinter main loop
         self.root.mainloop()
+
+    # Bind a click event to open the file explorer
+    def open_project_path(self, event):
+        if os.path.exists(self.project_path):
+            # Open the directory in the file explorer
+            subprocess.Popen(f'explorer "{self.project_path}"')
 
     def on_window_resize(self, event):
         """Handle window resize events."""
@@ -234,8 +243,13 @@ class Window:
             cv2.imwrite(os.path.join(self._get_data_folder_path(), PILLAR_NUMBERS_IMAGE), self.pillar_image)
 
     def new_project(self):
-        print("New Project selected")
-        # Your new project functionality here
+        dialog = NewProjectDialog(self.root, title="Create New Project")
+        if dialog.project_path:
+            self.project_path = dialog.project_path
+            print(f"New project created at: {dialog.project_path}")
+            self.current_directory_label.config(text=f"Project: {os.path.split(self.project_path)[-1]}")
+        else:
+            print("Project creation was cancelled or failed.")
 
     def open_project(self):
         folder_path = filedialog.askdirectory(title="Open Project Folder")
@@ -292,8 +306,6 @@ class Window:
         # Display the image on the canvas, centered
         self.canvas_image = self.canvas.create_image(x_offset, y_offset, anchor="nw", image=image_tk)
         self.canvas.image = image_tk  # Store reference to avoid garbage collection
-
-
 
 if __name__ == "__main__":
     Window()
