@@ -152,12 +152,12 @@ class Window:
             # polygons.append(approx)
 
             # Filter vertices based on minimum distance
-            filtered_approx = []
-            for i, vertex in enumerate(approx):
-                if i == 0 or np.linalg.norm(vertex[0] - filtered_approx[-1][0]) > min_vertex_distance:
-                    filtered_approx.append(vertex)
+            # filtered_approx = []
+            # for i, vertex in enumerate(approx):
+            #     if i == 0 or np.linalg.norm(vertex[0] - filtered_approx[-1][0]) > min_vertex_distance:
+            #         filtered_approx.append(vertex)
 
-            polygons.append(np.array(filtered_approx))
+            polygons.append(np.array(approx))
         
         return polygons
 
@@ -268,7 +268,7 @@ class Window:
                     f.write(f"{actual_x:.4f} {actual_y:.4f}\n")
 
         # Save current image to the data folder
-        if pillars and self.pillar_image:
+        if pillars and self.pillar_image.any():
             cv2.imwrite(os.path.join(self._get_data_folder_path(), PILLAR_NUMBERS_IMAGE), self.pillar_image)
 
     def new_project(self):

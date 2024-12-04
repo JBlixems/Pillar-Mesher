@@ -86,7 +86,7 @@ class Mesher:
             with open(pillar_file, 'r') as file:
                 lines = file.readlines()
                 for line in lines:
-                    if line.strip().startswith('P'):
+                    if line.strip().startswith(PILLAR_OUTPUT_FILENAME_START):
                         if current_hole:
                             # Connect last segment to first for closed loop
                             current_segments.append([len(current_hole) - 1, 0])
@@ -129,7 +129,7 @@ class Mesher:
 
             # Generate the mesh using the triangulate function with a max_area constraint
             mesh = triangle.triangulate(polygon, f"pqa{max_area}")
-            mesh = self.enforce_edge_constraint(mesh)
+            # mesh = self.enforce_edge_constraint(mesh)
 
             # Create Data directory if it doesn't exist
             mesh_dir = os.path.join(self.project_path, DATA_FOLDER_NAME, MESH_FOLDER_NAME)
@@ -153,6 +153,7 @@ class Mesher:
 
             # Create text files for each hole
             hole_files = [open(os.path.join(mesh_dir, f"{PILLAR_OUTPUT_FILENAME_START}{i+1}.{ELEMENT_FILE_EXT}"), "a") for i in range(len(holes))]
+            print("Something should be big", len(hole_files))
             hole_plot_files = [open(os.path.join(plot_dir, f"{PILLAR_OUTPUT_FILENAME_START}{i+1}.{PLOT_FILE_EXT}"), "a") for i in range(len(holes))]
             mined_file = open(os.path.join(mesh_dir, f"{MINED_OUTPUT_FILENAME_START}1.{ELEMENT_FILE_EXT}"), "a")
             mined_plot_file = open(os.path.join(plot_dir, f"{MINED_OUTPUT_FILENAME_START}1.{PLOT_FILE_EXT}"), "a")
