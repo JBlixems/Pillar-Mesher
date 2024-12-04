@@ -3,11 +3,11 @@ import cv2
 import os
 from tkinter import Tk, Scale, HORIZONTAL, Canvas, filedialog, simpledialog, Menu, Label, Frame, font
 from PIL import Image, ImageTk
-from loadingDialog import MeshLoader
+from Dialogs.loadingDialog import MeshLoader
 from mesher import Mesher
-from plotDialog import Plotter
-from gridSizeDialog import GridSizeDialog
-from newProjectDialog import NewProjectDialog
+from Dialogs.plotDialog import Plotter
+from Dialogs.gridSizeDialog import GridSizeDialog
+from Dialogs.newProjectDialog import NewProjectDialog
 from constants import *
 import subprocess
 
