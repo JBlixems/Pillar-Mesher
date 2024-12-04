@@ -15,6 +15,7 @@ class Window:
     def __init__(self):
         self.project_path = os.getcwd()
         print("Project path:", self.project_path)
+
         self.image1 = cv2.imread(os.path.join("Assets", "layout.png"))
         self.polygons = []
         self.canvas_image = None
@@ -25,14 +26,17 @@ class Window:
         self.root.title("PolyMesh - Polygon Mesh Generator")
         self.root.state('zoomed')
         self.root.bind("<Configure>", self.on_window_resize)
+        self.root.protocol("WM_DELETE_WINDOW", self.quit_application)
+        self.root.iconphoto(True, ImageTk.PhotoImage(Image.open(os.path.join("Assets", "Logo.png")) ))
 
-        # Load logo
-        logo_image = Image.open(os.path.join("Assets", "Logo.png")) 
-        logo_photo = ImageTk.PhotoImage(logo_image)
+        self.init_menu()
+        self.init_toolbar()
+        self.initialize_canvas()
+        self.update_image()
 
-        # Set the window icon
-        self.root.iconphoto(True, logo_photo)
+        self.root.mainloop()
 
+    def init_menu(self):
         # Create a menu bar
         menu_bar = Menu()
 
@@ -50,15 +54,22 @@ class Window:
         save_menu.add_command(label="Save Pillars", command=self.save_pillars)
         menu_bar.add_cascade(label="Save", menu=save_menu)
 
+        # Image Menu
+        self.image_menu = Menu(menu_bar, tearoff=0)
+        
+        # Add "Select" menu to the Image Menu
+        self.image_menu.add_command(label="Update Images", command=self.populate_select_menu)
+        menu_bar.add_cascade(label="Image", menu=self.image_menu)
+
         # Mesh Menu
         mesh_menu = Menu(menu_bar, tearoff=0)
         mesh_menu.add_command(label="Mesh Files", command=self.mesh_files)
         mesh_menu.add_command(label="Plot Mesh", command=self.plot_files)
         menu_bar.add_cascade(label="Mesh", menu=mesh_menu)
 
-        # Attach the menu bar to the root window
         self.root.config(menu=menu_bar)
 
+    def init_toolbar(self):
         # Create a frame for the toolbar
         color = "#e6e6e6"
         self.toolbar = Frame(self.root, bg=color, padx=10, pady=10)
@@ -86,16 +97,24 @@ class Window:
                                            bg=color, font=custom_font)
         self.min_distance_slider.pack(side="left", padx=15)
 
-        # Create a canvas to display the image
-        self.canvas = Canvas(self.root)
-        self.canvas.pack(fill="both", expand=True)
-
-        self.initialize_canvas()
-        self.update_image()
-
-        self.root.protocol("WM_DELETE_WINDOW", self.quit_application)
-        # Start the Tkinter main loop
-        self.root.mainloop()
+            # Populate the "Select" submenu with image files
+    def populate_select_menu(self):
+        """Dynamically populates the 'Select' menu with image files."""
+        self.image_menu.delete(0, "end")  # Clear existing items
+        image_files = [
+            os.path.join(self.project_path, f)
+            for f in os.listdir(self.project_path)
+            if f.lower().endswith(('.png', '.jpg'))
+        ]
+        if not image_files:
+            self.image_menu.add_command(label="No images found", state="disabled")
+        else:
+            for image_path in image_files:
+                image_name = os.path.basename(image_path)
+                self.image_menu.add_command(
+                    label=image_name,
+                    command=lambda path=image_path: self.select_image(path)
+                )
 
     # Bind a click event to open the file explorer
     def open_project_path(self, event):
@@ -113,7 +132,6 @@ class Window:
         self._last_size = (event.width, event.height)
         
         # Update the canvas and the image
-        self.canvas.size = (event.width, event.height)
         self.update_image()
 
     def find_polygons(self, image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01, min_vertex_distance=0):
@@ -203,7 +221,17 @@ class Window:
     def upload_image(self):
         file_path = filedialog.askopenfilename(filetypes=[("PNG files", "*.png")])
         if file_path:
-            self.image1 = cv2.imread(file_path)
+            # Copy the image to the project folder give it a unique file name
+            new_image_path = os.path.join(self.project_path, UPLOAD_FILE_NAME)
+            cv2.imwrite(new_image_path, cv2.imread(file_path))          
+
+            self.select_image(new_image_path)
+
+            self.populate_select_menu()
+
+    def select_image(self, path):
+        if os.path.exists(path):
+            self.image1 = cv2.imread(path)
             self.update_image()
 
     def _get_data_folder_path(self):
@@ -254,10 +282,15 @@ class Window:
 
     def open_project(self):
         folder_path = filedialog.askdirectory(title="Open Project Folder")
+
+        # Change project path to valid os path
+        folder_path = folder_path.replace("/", "\\")
+
         if folder_path:
             self.project_path = folder_path
-            print(f"Opening project from {folder_path}")
             self.current_directory_label.config(text=f"Project: {os.path.split(self.project_path)[-1]}")
+
+            self.populate_select_menu()
 
     def save_outline(self):
         self.save_polygons(pillars=False)
@@ -279,6 +312,10 @@ class Window:
         plotter.run_plotter()
 
     def initialize_canvas(self):
+        # Create a canvas to display the image
+        self.canvas = Canvas(self.root)
+        self.canvas.pack(fill="both", expand=True)
+
         # Update the Tkinter window to ensure dimensions are available
         self.root.update_idletasks()
 
@@ -300,7 +337,7 @@ class Window:
         image_tk = ImageTk.PhotoImage(image_pil)
 
         # Calculate offsets to center the image on the canvas
-        image_width, image_height = resized_image.shape[1], resized_image.shape[0]
+        image_width, image_height = image_tk.width(), image_tk.height()
         x_offset = (canvas_width - image_width) // 2
         y_offset = (canvas_height - image_height) // 2
 
