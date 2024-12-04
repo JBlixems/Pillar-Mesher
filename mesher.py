@@ -41,7 +41,7 @@ class Mesher:
             p1x, p1y = p2x, p2y
         return inside
   
-    def enforce_edge_constraint(self, mesh, max_edges=9):
+    def enforce_edge_constraint(self, mesh, max_edges=10):
         # Create adjacency list to count edges per vertex
         vertex_edges = {i: set() for i in range(len(mesh['vertices']))}
         for triangle_indices in mesh['triangles']:
@@ -129,7 +129,7 @@ class Mesher:
 
             # Generate the mesh using the triangulate function with a max_area constraint
             mesh = triangle.triangulate(polygon, f"pqa{max_area}")
-            # mesh = self.enforce_edge_constraint(mesh)
+            mesh = self.enforce_edge_constraint(mesh)
 
             # Create Data directory if it doesn't exist
             mesh_dir = os.path.join(self.project_path, DATA_FOLDER_NAME, MESH_FOLDER_NAME)
@@ -199,7 +199,7 @@ class Mesher:
                         break
 
                 if not inside_hole:
-                    el_name = "01" + f"{m_counter:05}"
+                    el_name = "1" + f"{m_counter:06}"
                     m_counter += 1
                     mined_file.write(
                         f"{MINED_TEXT.replace('XXXXXXX', el_name)}{triangle_points[0][0]:.4f} {triangle_points[0][1]:.4f} "
