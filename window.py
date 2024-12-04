@@ -219,10 +219,10 @@ class Window:
 
     # Function to upload a new image
     def upload_image(self):
-        file_path = filedialog.askopenfilename(filetypes=[("PNG files", "*.png")])
+        file_path = filedialog.askopenfilename(filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg")])
         if file_path:
             # Copy the image to the project folder give it a unique file name
-            new_image_path = os.path.join(self.project_path, UPLOAD_FILE_NAME)
+            new_image_path = os.path.join(self.project_path, os.path.basename(file_path))
             cv2.imwrite(new_image_path, cv2.imread(file_path))          
 
             self.select_image(new_image_path)
@@ -277,8 +277,6 @@ class Window:
             self.project_path = dialog.project_path
             print(f"New project created at: {dialog.project_path}")
             self.current_directory_label.config(text=f"Project: {os.path.split(self.project_path)[-1]}")
-        else:
-            print("Project creation was cancelled or failed.")
 
     def open_project(self):
         folder_path = filedialog.askdirectory(title="Open Project Folder")
