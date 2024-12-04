@@ -66,7 +66,7 @@ class Mesher:
         # Optionally, retriangulate locally to fill gaps (not shown here for simplicity)
         return mesh
 
-    def mesh_area(self, window, progress, label, stop_event, max_area):
+    def mesh_area(self, window, progress, label, stop_event, max_area, plot_func):
         # Read the pillar (hole) vertices
         holes = []
         hole_segments = []
@@ -75,6 +75,7 @@ class Mesher:
 
         hole_files = []
         hole_plot_files = []        
+        meshing_successful = False
         try:
             border_file = os.path.join(self.project_path, DATA_FOLDER_NAME, BORDER_VERTEX_FILE_NAME)
             pillar_file = os.path.join(self.project_path, DATA_FOLDER_NAME, PILLAR_VERTEX_FILE_NAME)
@@ -213,13 +214,10 @@ class Mesher:
                     )   
 
                 if(i % 100 == 0):
-                    print(i, f"{i/self.triangles:.2%}")
+                    # print(i, f"{i/self.triangles:.2%}")
                     progress['value'] = (i/self.triangles)*100  # Update progress bar
             
-            for f in hole_files:
-                f.close()
-            for f in hole_plot_files:
-                f.close()  
+            meshing_successful = True
 
         except Exception as e:
             print(e)
@@ -233,6 +231,10 @@ class Mesher:
                 f.close()
             for f in hole_plot_files:
                 f.close()  
+
+            # Plot the mesh
+            if meshing_successful:
+                plot_func()
             
             print("Exited the mesh generator and closed all files")
         

@@ -30,9 +30,9 @@ class MeshLoader:
         # Close button action
         self.window.protocol("WM_DELETE_WINDOW", self.cancel_all)
 
-    def start_meshing(self, max_area):
+    def start_meshing(self, max_area, plot_func):
         """Start the meshing process in a separate thread."""
-        self.meshing_thread = threading.Thread(target=self.meshing_function, args=(self.window, self.progress, self.label, self.stop_event, max_area))
+        self.meshing_thread = threading.Thread(target=self.meshing_function, args=(self.window, self.progress, self.label, self.stop_event, max_area, plot_func))
         self.meshing_thread.start()
 
     def cancel_all(self):

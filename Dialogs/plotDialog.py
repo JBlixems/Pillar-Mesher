@@ -35,6 +35,9 @@ class Plotter:
     def read_mesh_data(self):
         """Reads all .tri files in the folder and organizes them by color."""
         mesh_data = []
+        if not os.path.exists(self.folder_path):
+            return mesh_data
+        
         for filename in os.listdir(self.folder_path):
             if filename.endswith(f".{ELEMENT_FILE_EXT}"):
                 file_path = os.path.join(self.folder_path, filename)

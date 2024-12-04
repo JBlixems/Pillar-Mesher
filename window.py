@@ -99,6 +99,7 @@ class Window:
 
     # Bind a click event to open the file explorer
     def open_project_path(self, event):
+        print("Opening project path", self.project_path)
         if os.path.exists(self.project_path):
             # Open the directory in the file explorer
             subprocess.Popen(f'explorer "{self.project_path}"')
@@ -239,7 +240,7 @@ class Window:
                     f.write(f"{actual_x:.4f} {actual_y:.4f}\n")
 
         # Save current image to the data folder
-        if self.pillar_image:
+        if pillars and self.pillar_image:
             cv2.imwrite(os.path.join(self._get_data_folder_path(), PILLAR_NUMBERS_IMAGE), self.pillar_image)
 
     def new_project(self):
@@ -269,8 +270,8 @@ class Window:
         max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
         if max_area is not None:
             mesh_loader = MeshLoader(self.root, mesher.mesh_area)
+            mesh_loader.start_meshing(max_area, self.plot_files)
 
-            mesh_loader.start_meshing(max_area)
 
     def plot_files(self):
         folder_path = self._get_mesh_folder_path()
