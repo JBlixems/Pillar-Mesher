@@ -1,7 +1,9 @@
 import numpy as np
 import cv2
 import os
-from tkinter import Tk, Scale, HORIZONTAL, Canvas, filedialog, simpledialog, Menu, Label, Frame, font
+import customtkinter
+from CTkMenuBar import *
+from tkinter import filedialog, simpledialog
 from PIL import Image, ImageTk
 from Dialogs.loadingDialog import MeshLoader
 from mesher import Mesher
@@ -22,14 +24,17 @@ class Window:
         self.pillar_image = None
 
         # Create the main Tkinter window
-        self.root = Tk()
+        customtkinter.set_appearance_mode("light")
+        self.root = customtkinter.CTk()
         self.root.title("PolyMesh - Polygon Mesh Generator")
-        self.root.state('zoomed')
+        self.root.after(0, lambda: self.root.wm_state('zoomed'))
+        self.root.focus = True
         self.root.bind("<Configure>", self.on_window_resize)
         self.root.protocol("WM_DELETE_WINDOW", self.quit_application)
         self.root.iconphoto(True, ImageTk.PhotoImage(Image.open(os.path.join("Assets", "Logo.png")) ))
 
         self.init_menu()
+        self.populate_select_menu()
         self.init_toolbar()
         self.initialize_canvas()
         self.update_image()
@@ -37,82 +42,106 @@ class Window:
         self.root.mainloop()
 
     def init_menu(self):
-        # Create a menu bar
-        menu_bar = Menu()
+        menu_bar = CTkMenuBar(self.root)
+        menu_bar._corner_radius = 0
+        menu_bar.pack(side="top", fill="x")
+
+        file_menu = menu_bar.add_cascade("File")
+        file_menu._corner_radius = 0
+        save_menu = menu_bar.add_cascade("Save")
+        save_menu._corner_radius = 0
+        self.image_menu = menu_bar.add_cascade("Image")
+        self.image_menu._corner_radius = 0
+        mesh_menu = menu_bar.add_cascade("Mesh")
+        mesh_menu._corner_radius = 0
 
         # File Menu
-        file_menu = Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="New Project", command=self.new_project)
-        file_menu.add_command(label="Open Project", command=self.open_project)
-        file_menu.add_separator()
-        file_menu.add_command(label="Upload Image", command=self.upload_image)
-        menu_bar.add_cascade(label="File", menu=file_menu)
+        file_menu_drop = CustomDropdownMenu(file_menu)
+        file_menu_drop.corner_radius = 0
+        file_menu_drop._corner_radius = 0
+        file_menu_drop.add_option(option="New Project", command=self.new_project)
+        file_menu_drop.add_option(option="Open Project", command=self.open_project)
+        file_menu_drop.add_separator()
+        file_menu_drop.add_option(option="Upload Image", command=self.upload_image)
 
         # Save Menu
-        save_menu = Menu(menu_bar, tearoff=0)
-        save_menu.add_command(label="Save Border", command=self.save_outline)
-        save_menu.add_command(label="Save Pillars", command=self.save_pillars)
-        menu_bar.add_cascade(label="Save", menu=save_menu)
+        save_menu_drop = CustomDropdownMenu(save_menu)
+        save_menu_drop.corner_radius = 0
+        save_menu_drop._corner_radius = 0
+        save_menu_drop.add_option(option="Save Border", command=self.save_outline)
+        save_menu_drop.add_option(option="Save Pillars", command=self.save_pillars)
 
-        # Image Menu
-        self.image_menu = Menu(menu_bar, tearoff=0)
-        
-        # Add "Select" menu to the Image Menu
-        self.image_menu.add_command(label="Update Images", command=self.populate_select_menu)
-        menu_bar.add_cascade(label="Image", menu=self.image_menu)
-
-        # Mesh Menu
-        mesh_menu = Menu(menu_bar, tearoff=0)
-        mesh_menu.add_command(label="Mesh Files", command=self.mesh_files)
-        mesh_menu.add_command(label="Plot Mesh", command=self.plot_files)
-        menu_bar.add_cascade(label="Mesh", menu=mesh_menu)
-
-        self.root.config(menu=menu_bar)
+        # # Mesh Menu
+        mesh_menu_drop = CustomDropdownMenu(mesh_menu)
+        mesh_menu_drop.corner_radius = 0
+        mesh_menu_drop._corner_radius = 0
+        mesh_menu_drop.add_option(option="Mesh Files", command=self.mesh_files)
+        mesh_menu_drop.add_option(option="Plot Mesh", command=self.plot_files)
 
     def init_toolbar(self):
         # Create a frame for the toolbar
-        color = "#e6e6e6"
-        self.toolbar = Frame(self.root, bg=color, padx=10, pady=10)
+        self.toolbar = customtkinter.CTkFrame(self.root)
         self.toolbar.pack(side="top", fill="x", anchor="n")
 
         # Display the current working directory
-        self.current_directory_label = Label(self.toolbar, text=f"Project: {os.path.split(self.project_path)[-1]}", anchor="w", bg="#3a3a3a", fg="#ffffff", font=("Helvetica", 12, "italic"), cursor="hand2")
+        self.current_directory_label = customtkinter.CTkLabel(
+            self.toolbar, 
+            text=f"Project: {os.path.split(self.project_path)[-1]}",
+            anchor="w",
+            cursor="hand2"
+        )
         self.current_directory_label.bind("<Button-1>", self.open_project_path)
         self.current_directory_label.pack(side="right", padx=5, anchor="ne")
 
         # Create a frame inside the toolbar for sliders (to center them)
-        self.sliders_frame = Frame(self.toolbar, bg=color)
+        self.sliders_frame = customtkinter.CTkFrame(self.toolbar)
         self.sliders_frame.pack(side="top", padx=10)
 
-        # Set font style for the sliders and labels
-        custom_font = font.Font(family="Helvetica", size=12, weight="bold")
-
         # Add the epsilon slider
-        self.epsilon_slider = Scale(self.sliders_frame, from_=1, to=1000, orient=HORIZONTAL, label="Vertex Sensitivity Factor", command=lambda x: self.update_image(), length=400, showvalue=0,
-                                    bg=color, font=custom_font)
+        customtkinter.CTkLabel(self.sliders_frame, text="Vertex Sensitivity Factor").pack(side="left", padx=5)
+
+        self.epsilon_slider = customtkinter.CTkSlider(
+            self.sliders_frame,
+            from_=1,
+            to=1000,
+            command=lambda x: self.update_image(),
+        )
+        self.epsilon_slider.set(100)
         self.epsilon_slider.pack(side="left", padx=15)
 
         # Add the pixel distance slider
-        self.min_distance_slider = Scale(self.sliders_frame, from_=1, to=1000, orient=HORIZONTAL, label="Minimum Vertex Distance", command=lambda x: self.update_image(), length=400, showvalue=0, 
-                                           bg=color, font=custom_font)
+        customtkinter.CTkLabel(self.sliders_frame, text="Minimum Vertex Distance").pack(side="left", padx=5)
+
+        self.min_distance_slider = customtkinter.CTkSlider(
+            self.sliders_frame,
+            from_=0,
+            to=1000,
+            command=lambda x: self.update_image(),
+        )
+        self.min_distance_slider.set(0)
         self.min_distance_slider.pack(side="left", padx=15)
 
-            # Populate the "Select" submenu with image files
+    # Populate the "Select" submenu with image files
     def populate_select_menu(self):
         """Dynamically populates the 'Select' menu with image files."""
-        self.image_menu.delete(0, "end")  # Clear existing items
+
+        # Add "Select" menu to the Image Menu
+        self.image_menu_drop = CustomDropdownMenu(self.image_menu)
+        self.image_menu_drop.corner_radius = 0
+        self.image_menu_drop._corner_radius = 0
+
         image_files = [
             os.path.join(self.project_path, f)
             for f in os.listdir(self.project_path)
             if f.lower().endswith(('.png', '.jpg'))
         ]
         if not image_files:
-            self.image_menu.add_command(label="No images found", state="disabled")
+            self.image_menu_drop.add_option(option="No images found")
         else:
             for image_path in image_files:
                 image_name = os.path.basename(image_path)
-                self.image_menu.add_command(
-                    label=image_name,
+                self.image_menu_drop.add_option(
+                    option=image_name,
                     command=lambda path=image_path: self.select_image(path)
                 )
 
@@ -276,7 +305,10 @@ class Window:
         if dialog.project_path:
             self.project_path = dialog.project_path
             print(f"New project created at: {dialog.project_path}")
-            self.current_directory_label.config(text=f"Project: {os.path.split(self.project_path)[-1]}")
+            self.current_directory_label.configure(text=f"Project: {os.path.split(self.project_path)[-1]}")
+
+            self.populate_select_menu()
+
 
     def open_project(self):
         folder_path = filedialog.askdirectory(title="Open Project Folder")
@@ -286,8 +318,17 @@ class Window:
 
         if folder_path:
             self.project_path = folder_path
-            self.current_directory_label.config(text=f"Project: {os.path.split(self.project_path)[-1]}")
+            self.current_directory_label.configure(text=f"Project: {os.path.split(self.project_path)[-1]}")
 
+            image_files = [
+                os.path.join(self.project_path, f)
+                for f in os.listdir(self.project_path)
+                if f.lower().endswith(('.png', '.jpg'))
+            ]
+            if image_files:
+                self.image1 = cv2.imread(image_files[0])
+                self.update_image()
+            
             self.populate_select_menu()
 
     def save_outline(self):
@@ -310,8 +351,12 @@ class Window:
         plotter.run_plotter()
 
     def initialize_canvas(self):
+        # Create a ttk.Frame to hold the canvas
+        self.canvas_frame = customtkinter.CTkFrame(self.root)
+        self.canvas_frame.pack(fill="both", expand=True)
+        
         # Create a canvas to display the image
-        self.canvas = Canvas(self.root)
+        self.canvas = customtkinter.CTkCanvas(self.canvas_frame)
         self.canvas.pack(fill="both", expand=True)
 
         # Update the Tkinter window to ensure dimensions are available
@@ -332,16 +377,15 @@ class Window:
 
         # Convert to Tkinter-compatible image
         image_pil = Image.fromarray(resized_image)
-        image_tk = ImageTk.PhotoImage(image_pil)
+        self.image_tk = ImageTk.PhotoImage(image_pil)
 
         # Calculate offsets to center the image on the canvas
-        image_width, image_height = image_tk.width(), image_tk.height()
+        image_width, image_height = self.image_tk.width(), self.image_tk.height()
         x_offset = (canvas_width - image_width) // 2
         y_offset = (canvas_height - image_height) // 2
 
         # Display the image on the canvas, centered
-        self.canvas_image = self.canvas.create_image(x_offset, y_offset, anchor="nw", image=image_tk)
-        self.canvas.image = image_tk  # Store reference to avoid garbage collection
+        self.canvas_image = self.canvas.create_image(x_offset, y_offset, anchor="nw", image=self.image_tk)
 
 if __name__ == "__main__":
     Window()
