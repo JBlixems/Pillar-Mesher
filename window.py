@@ -337,12 +337,13 @@ class Window:
                     f.write(f"{actual_x:.4f} {actual_y:.4f}\n")
 
         # Save current image to the data folder
-        if pillars and self.pillar_image.any():
+        if pillars and self.pillar_image is not None:
             cv2.imwrite(os.path.join(self._get_data_folder_path(), PILLAR_NUMBERS_IMAGE), self.pillar_image)
 
     def new_project(self):
         dialog = NewProjectDialog(self.root, title="Create New Project")
         if dialog.project_path:
+            dialog.project_path.replace("/", "\\")
             self.project_path = dialog.project_path
             print(f"New project created at: {dialog.project_path}")
             self.current_directory_label.configure(text=f"Project: {os.path.split(self.project_path)[-1]}")

@@ -1,30 +1,33 @@
-import tkinter as tk
-from tkinter import simpledialog, filedialog, messagebox
+from tkinter import simpledialog, filedialog, messagebox, Label, Button, Entry, font
 import os
 
 class NewProjectDialog(simpledialog.Dialog):
-    def __init__(self, parent, title=None):
+    def __init__(self, parent, title=None, scale_factor=1.5):
         self.project_name = None
         self.parent_folder = None
         self.project_path = None
+        self.scale_factor = scale_factor
         super().__init__(parent, title)
 
     def body(self, master):
+        default_font = font.nametofont("TkDefaultFont")
+        default_font.configure(size=int(default_font.cget("size") * self.scale_factor))
+
         # Project name entry
-        tk.Label(master, text="Enter Project Name:").grid(row=0, column=0, padx=5, pady=5)
-        self.project_name_entry = tk.Entry(master)
-        self.project_name_entry.grid(row=0, column=1, padx=5, pady=5)
+        Label(master, text="Enter Project Name:", font=default_font).grid(row=0, column=0, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
+        self.project_name_entry = Entry(master, font=default_font, width=int(34 * self.scale_factor))
+        self.project_name_entry.grid(row=0, column=1, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
 
         # Parent folder selection
-        tk.Label(master, text="Select Parent Folder:").grid(row=1, column=0, padx=5, pady=5)
-        self.parent_folder_label = tk.Label(master, text="(None selected)", bg="white", anchor="w", relief="solid")
-        self.parent_folder_label.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        tk.Button(master, text="Browse...", command=self.select_folder).grid(row=1, column=2, padx=5, pady=5)
+        Label(master, text="Select Parent Folder:", font=default_font).grid(row=1, column=0, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
+        self.parent_folder_label = Label(master, text="(None selected)", bg="white", anchor="w", relief="solid", width=int(30 * self.scale_factor))
+        self.parent_folder_label.grid(row=1, column=1, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor), sticky="ew")
+        Button(master, text="Browse...", command=self.select_folder, font=default_font).grid(row=1, column=2, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
 
         # Make the parent folder label expand
         master.columnconfigure(1, weight=1)
 
-        return self.project_name_entry  # Initial focus
+        return self.project_name_entry
 
     def select_folder(self):
         folder = filedialog.askdirectory(title="Select Parent Folder")
