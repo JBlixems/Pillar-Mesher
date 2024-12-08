@@ -34,25 +34,23 @@ class Window:
         self.root.iconphoto(True, ImageTk.PhotoImage(Image.open(os.path.join("Assets", "Logo.png")) ))
 
         self.init_menu()
-        self.populate_select_menu()
         self.init_toolbar()
-        self.initialize_canvas()
-        self.update_image()
+        self.init_canvas()
 
         self.root.mainloop()
 
     def init_menu(self):
-        menu_bar = CTkMenuBar(self.root)
-        menu_bar._corner_radius = 0
-        menu_bar.pack(side="top", fill="x")
+        self.menu_bar = CTkMenuBar(self.root)
+        self.menu_bar._corner_radius = 0
+        self.menu_bar.pack(side="top", fill="x")
 
-        file_menu = menu_bar.add_cascade("File")
+        file_menu = self.menu_bar.add_cascade("File")
         file_menu._corner_radius = 0
-        save_menu = menu_bar.add_cascade("Save")
+        save_menu = self.menu_bar.add_cascade("Save")
         save_menu._corner_radius = 0
-        self.image_menu = menu_bar.add_cascade("Image")
+        self.image_menu = self.menu_bar.add_cascade("Image")
         self.image_menu._corner_radius = 0
-        mesh_menu = menu_bar.add_cascade("Mesh")
+        mesh_menu = self.menu_bar.add_cascade("Mesh")
         mesh_menu._corner_radius = 0
 
         # File Menu
@@ -77,6 +75,8 @@ class Window:
         mesh_menu_drop._corner_radius = 0
         mesh_menu_drop.add_option(option="Mesh Files", command=self.mesh_files)
         mesh_menu_drop.add_option(option="Plot Mesh", command=self.plot_files)
+
+        self.populate_select_menu()
 
     def init_toolbar(self):
         # Create a frame for the toolbar
@@ -120,6 +120,45 @@ class Window:
         )
         self.min_distance_slider.set(0)
         self.min_distance_slider.pack(side="left", padx=15)
+
+    def init_canvas(self):
+        # Create a ttk.Frame to hold the canvas
+        self.canvas_frame = customtkinter.CTkFrame(self.root)
+        self.canvas_frame.pack(fill="both", expand=True)
+        
+        # Create a canvas to display the image
+        self.canvas = customtkinter.CTkCanvas(self.canvas_frame)
+        self.canvas.pack(fill="both", expand=True)
+
+        # Update the Tkinter window to ensure dimensions are available
+        self.root.update_idletasks()
+
+        # Get the fullscreen dimensions
+        canvas_width = self.root.winfo_width()
+        canvas_height = self.root.winfo_height() - self.toolbar.winfo_height() - self.menu_bar.winfo_height()
+
+        print(f"Fullscreen size: {canvas_width}x{canvas_height}")
+
+        # Configure the canvas to match fullscreen dimensions
+        self.canvas.config(width=canvas_width, height=canvas_height)
+
+        # Resize the image to fit the fullscreen canvas
+        image_rgb = cv2.cvtColor(self.image1, cv2.COLOR_BGR2RGB)
+        resized_image = self.resize_image_to_fit_canvas(image_rgb, canvas_width, canvas_height)
+
+        # Convert to Tkinter-compatible image
+        image_pil = Image.fromarray(resized_image)
+        self.image_tk = ImageTk.PhotoImage(image_pil)
+
+        # Calculate offsets to center the image on the canvas
+        image_width, image_height = self.image_tk.width(), self.image_tk.height()
+        x_offset = (canvas_width - image_width) // 2
+        y_offset = (canvas_height - image_height) // 2
+
+        # Display the image on the canvas, centered
+        self.canvas_image = self.canvas.create_image(x_offset, y_offset, anchor="nw", image=self.image_tk)
+
+        self.update_image()
 
     # Populate the "Select" submenu with image files
     def populate_select_menu(self):
@@ -226,8 +265,8 @@ class Window:
         cv2.putText(image_copy, f'Vertices: {num_vertices}', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
         # Resize image to fit canvas
-        canvas_width = self.root.winfo_width()
-        canvas_height = self.root.winfo_height()
+        canvas_width = self.root.winfo_width() 
+        canvas_height = self.root.winfo_height() - self.toolbar.winfo_height() - self.menu_bar.winfo_height()
         image_rgb = cv2.cvtColor(image_copy, cv2.COLOR_BGR2RGB)
         self.pillar_image = image_rgb
         resized_image = self.resize_image_to_fit_canvas(image_rgb, canvas_width, canvas_height)
@@ -349,43 +388,6 @@ class Window:
         folder_path = self._get_mesh_folder_path()
         plotter = Plotter(folder_path)
         plotter.run_plotter()
-
-    def initialize_canvas(self):
-        # Create a ttk.Frame to hold the canvas
-        self.canvas_frame = customtkinter.CTkFrame(self.root)
-        self.canvas_frame.pack(fill="both", expand=True)
-        
-        # Create a canvas to display the image
-        self.canvas = customtkinter.CTkCanvas(self.canvas_frame)
-        self.canvas.pack(fill="both", expand=True)
-
-        # Update the Tkinter window to ensure dimensions are available
-        self.root.update_idletasks()
-
-        # Get the fullscreen dimensions
-        canvas_width = self.root.winfo_width()
-        canvas_height = self.root.winfo_height()
-
-        print(f"Fullscreen size: {canvas_width}x{canvas_height}")
-
-        # Configure the canvas to match fullscreen dimensions
-        self.canvas.config(width=canvas_width, height=canvas_height)
-
-        # Resize the image to fit the fullscreen canvas
-        image_rgb = cv2.cvtColor(self.image1, cv2.COLOR_BGR2RGB)
-        resized_image = self.resize_image_to_fit_canvas(image_rgb, canvas_width, canvas_height)
-
-        # Convert to Tkinter-compatible image
-        image_pil = Image.fromarray(resized_image)
-        self.image_tk = ImageTk.PhotoImage(image_pil)
-
-        # Calculate offsets to center the image on the canvas
-        image_width, image_height = self.image_tk.width(), self.image_tk.height()
-        x_offset = (canvas_width - image_width) // 2
-        y_offset = (canvas_height - image_height) // 2
-
-        # Display the image on the canvas, centered
-        self.canvas_image = self.canvas.create_image(x_offset, y_offset, anchor="nw", image=self.image_tk)
 
 if __name__ == "__main__":
     Window()
