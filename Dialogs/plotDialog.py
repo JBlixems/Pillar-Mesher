@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from threading import Thread
 from constants import MINED_OUTPUT_FILENAME_START, ELEMENT_FILE_EXT
 
 class Plotter:
@@ -62,10 +61,4 @@ class Plotter:
         plt.xlabel("X")
         plt.ylabel("Y")
         plt.axis("equal")
-        plt.show(block=True)
-
-    def run_plotter(self):
-        """Runs the plotting function in a separate thread."""
-        mesh_data = self.read_mesh_data()
-        plot_thread = Thread(target=self.plot_mesh, args=(mesh_data,))
-        plot_thread.start()
+        plt.show()

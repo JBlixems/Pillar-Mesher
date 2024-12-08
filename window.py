@@ -3,12 +3,13 @@ import cv2
 import os
 import customtkinter
 from CTkMenuBar import *
-from tkinter import filedialog, simpledialog
+from tkinter import filedialog
 from PIL import Image, ImageTk
 from Dialogs.loadingDialog import MeshLoader
 from mesher import Mesher
 from Dialogs.plotDialog import Plotter
 from Dialogs.gridSizeDialog import GridSizeDialog
+from Dialogs.triangleSizeDialog import TriangleSizeDialog
 from Dialogs.newProjectDialog import NewProjectDialog
 from constants import *
 import subprocess
@@ -378,16 +379,16 @@ class Window:
 
     def mesh_files(self):
         mesher = Mesher(self.project_path)
-        max_area = simpledialog.askfloat("Input", "Enter triangle max area:", initialvalue=0.5)
+        dialog = TriangleSizeDialog(self.root, title="Mesh Triangle Size Input")
+        max_area = dialog.triangle_size
         if max_area is not None:
             mesh_loader = MeshLoader(self.root, mesher.mesh_area)
             mesh_loader.start_meshing(max_area, self.plot_files)
 
-
     def plot_files(self):
         folder_path = self._get_mesh_folder_path()
         plotter = Plotter(folder_path)
-        plotter.run_plotter()
+        plotter.plot_mesh(plotter.read_mesh_data())
 
 if __name__ == "__main__":
     Window()

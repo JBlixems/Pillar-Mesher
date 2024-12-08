@@ -1,20 +1,23 @@
-import tkinter as tk
-from tkinter import simpledialog, messagebox
+from tkinter import simpledialog, messagebox, Label, Entry, font
 
 class GridSizeDialog(simpledialog.Dialog):
-    def __init__(self, parent, title=None):
+    def __init__(self, parent, title=None, scale_factor=1.5):
         self.grid_max_x = None
         self.grid_max_y = None
+        self.scale_factor = scale_factor
         super().__init__(parent, title)
 
     def body(self, master):
-        tk.Label(master, text="Enter max grid X:").grid(row=0, column=0, padx=5, pady=5)
-        self.entry_x = tk.Entry(master)
-        self.entry_x.grid(row=0, column=1, padx=5, pady=5)
+        default_font = font.nametofont("TkDefaultFont")
+        default_font.configure(size=int(default_font.cget("size") * self.scale_factor))
 
-        tk.Label(master, text="Enter max grid Y:").grid(row=1, column=0, padx=5, pady=5)
-        self.entry_y = tk.Entry(master)
-        self.entry_y.grid(row=1, column=1, padx=5, pady=5)
+        Label(master, text="Enter max grid X:", font=default_font).grid(row=0, column=0, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
+        self.entry_x = Entry(master, font=default_font)
+        self.entry_x.grid(row=0, column=1, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
+
+        Label(master, text="Enter max grid Y:", font=default_font).grid(row=1, column=0, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
+        self.entry_y = Entry(master, font=default_font)
+        self.entry_y.grid(row=1, column=1, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
 
         return self.entry_x  # Initial focus
 
@@ -34,4 +37,3 @@ class GridSizeDialog(simpledialog.Dialog):
         except ValueError:
             self.grid_max_x = None
             self.grid_max_y = None
-
