@@ -27,13 +27,16 @@ class Window:
 
         # Create the main Tkinter window
         customtkinter.set_appearance_mode("light")
+
         self.root = customtkinter.CTk()
         self.root.title("PolyMesh - Polygon Mesh Generator")
         self.root.after(0, lambda: self.root.wm_state('zoomed'))
         self.root.focus = True
         self.root.bind("<Configure>", self.on_window_resize)
         self.root.protocol("WM_DELETE_WINDOW", self.quit_application)
-        self.root.iconphoto(True, ImageTk.PhotoImage(Image.open(os.path.join("Assets", "Logo.png")) ))
+
+        icon_photo = ImageTk.PhotoImage(Image.open(os.path.join("Assets", "Logo.png")))
+        self.root.iconphoto(True, icon_photo)
 
         self.init_menu()
         self.init_toolbar()
@@ -90,7 +93,8 @@ class Window:
             self.toolbar, 
             text=f"Project: {os.path.split(self.project_path)[-1]}",
             anchor="w",
-            cursor="hand2"
+            cursor="hand2",
+            font=("Arial", 14, "bold"),
         )
         self.current_directory_label.bind("<Button-1>", self.open_project_path)
         self.current_directory_label.pack(side="right", padx=5, anchor="ne")
