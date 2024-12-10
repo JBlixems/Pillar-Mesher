@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import os
 import customtkinter
+import subprocess
+
 from CTkMenuBar import *
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
@@ -12,14 +14,18 @@ from Dialogs.gridSizeDialog import GridSizeDialog
 from Dialogs.triangleSizeDialog import TriangleSizeDialog
 from Dialogs.newProjectDialog import NewProjectDialog
 from constants import *
-import subprocess
 
-class Window:
+# Pyinstaller command to create an executable
+# pyinstaller --onefile --windowed --add-data "Assets;Assets" --icon=Assets/Logo.ico PolyMesh.py
+
+class PolyMesh:
     def __init__(self):
+        self.path_to_logo_image = os.path.abspath(os.path.join(os.path.dirname(__file__), 'Assets', 'Logo.png'))
+        self.path_to_select_image = os.path.abspath(os.path.join(os.path.dirname(__file__), 'Assets', 'Select Image.png'))
         self.project_path = os.getcwd()
-        print("Project path:", self.project_path)
 
-        self.current_image_path = os.path.join("Assets", "Select Image.png")
+        self.dialog_scale_factor = 1.5
+        self.current_image_path = self.path_to_select_image
         self.image1 = cv2.imread(self.current_image_path)
         self.polygons = []
         self.canvas_image = None
@@ -35,7 +41,7 @@ class Window:
         self.root.bind("<Configure>", self.on_window_resize)
         self.root.protocol("WM_DELETE_WINDOW", self.quit_application)
 
-        icon_photo = ImageTk.PhotoImage(Image.open(os.path.join("Assets", "Logo.png")))
+        icon_photo = ImageTk.PhotoImage(Image.open(self.path_to_logo_image))
         self.root.iconphoto(True, icon_photo)
 
         self.init_menu()
@@ -209,7 +215,7 @@ class Window:
         self.update_image()
 
     def find_polygons(self, image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01, min_vertex_distance=0):
-        if self.current_image_path == os.path.join("Assets", "Select Image.png"):
+        if self.current_image_path == self.path_to_select_image:
             return []
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -323,7 +329,7 @@ class Window:
 
     # Function to save polygons to a text file
     def save_polygons(self, pillars=True):
-        dialog = GridSizeDialog(self.root, title="Grid Size Input")
+        dialog = GridSizeDialog(self.root, title="Grid Size Input", scale_factor=self.dialog_scale_factor)
         grid_max_x = dialog.grid_max_x
         grid_max_y = dialog.grid_max_y
         
@@ -350,7 +356,7 @@ class Window:
             cv2.imwrite(os.path.join(self._get_data_folder_path(), PILLAR_NUMBERS_IMAGE), self.pillar_image)
 
     def new_project(self):
-        dialog = NewProjectDialog(self.root, title="Create New Project")
+        dialog = NewProjectDialog(self.root, title="Create New Project", scale_factor=self.dialog_scale_factor)
         if dialog.project_path:
             dialog.project_path.replace("/", "\\")
             self.project_path = dialog.project_path
@@ -411,7 +417,7 @@ class Window:
             return
 
         mesher = Mesher(self.project_path)
-        dialog = TriangleSizeDialog(self.root, title="Mesh Triangle Size Input")
+        dialog = TriangleSizeDialog(self.root, title="Mesh Triangle Size Input", scale_factor=self.dialog_scale_factor)
         max_area = dialog.triangle_size
         if max_area is not None:
             mesh_loader = MeshLoader(self.root, mesher.mesh_area)
@@ -424,6 +430,6 @@ class Window:
 
 if __name__ == "__main__":
     try:
-        Window()
+        PolyMesh()
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred while running the application.\n{e}")

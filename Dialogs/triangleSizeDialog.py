@@ -7,7 +7,7 @@ class TriangleSizeDialog(simpledialog.Dialog):
         super().__init__(parent, title)
 
     def body(self, master):
-        default_font = font.nametofont("TkDefaultFont")
+        default_font = font.nametofont("TkDefaultFont").copy()
         default_font.configure(size=int(default_font.cget("size") * self.scale_factor))
 
         Label(master, text="Max mesh triangle size:", font=default_font).grid(row=0, column=0, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
@@ -18,14 +18,18 @@ class TriangleSizeDialog(simpledialog.Dialog):
 
     def validate(self):
         x = self.entry_x.get().strip()
-        if not x and not isinstance(x, float):
-            messagebox.showerror("Error", "Make sure the value is a decimal numbers!")
+        try:
+            # Attempt to convert the input to a float
+            float(x)
+        except ValueError:
+            # If conversion fails, show an error message
+            messagebox.showerror("Error", "Make sure the value is a decimal number!")
             return False
 
         return True
 
     def apply(self):
         try:
-            self.triangle_size = int(self.entry_x.get())
+            self.triangle_size = float(self.entry_x.get())
         except ValueError:
             self.triangle_size = None

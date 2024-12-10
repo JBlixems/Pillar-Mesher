@@ -8,7 +8,7 @@ class GridSizeDialog(simpledialog.Dialog):
         super().__init__(parent, title)
 
     def body(self, master):
-        default_font = font.nametofont("TkDefaultFont")
+        default_font = font.nametofont("TkDefaultFont").copy()
         default_font.configure(size=int(default_font.cget("size") * self.scale_factor))
 
         Label(master, text="Enter max grid X:", font=default_font).grid(row=0, column=0, padx=int(5 * self.scale_factor), pady=int(5 * self.scale_factor))
@@ -24,8 +24,13 @@ class GridSizeDialog(simpledialog.Dialog):
     def validate(self):
         x = self.entry_x.get().strip()
         y = self.entry_y.get().strip()
-        if not x and not isinstance(x, float) and not y and not isinstance(y, float):
-            messagebox.showerror("Error", "Make sure both values are decimal numbers!")
+        try:
+            # Attempt to convert the input to a int
+            int(x)
+            int(y)
+        except ValueError:
+            # If conversion fails, show an error message
+            messagebox.showerror("Error", "Make sure the values are integer numbers!")
             return False
 
         return True

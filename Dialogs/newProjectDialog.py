@@ -10,7 +10,7 @@ class NewProjectDialog(simpledialog.Dialog):
         super().__init__(parent, title)
 
     def body(self, master):
-        default_font = font.nametofont("TkDefaultFont")
+        default_font = font.nametofont("TkDefaultFont").copy()
         default_font.configure(size=int(default_font.cget("size") * self.scale_factor))
 
         # Project name entry

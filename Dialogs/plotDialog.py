@@ -1,5 +1,7 @@
 import os
 import numpy as np
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from constants import MINED_OUTPUT_FILENAME_START, ELEMENT_FILE_EXT
 
