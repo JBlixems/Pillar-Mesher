@@ -3,7 +3,7 @@ import cv2
 import os
 import customtkinter
 from CTkMenuBar import *
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 from Dialogs.loadingDialog import MeshLoader
 from mesher import Mesher
@@ -19,7 +19,8 @@ class Window:
         self.project_path = os.getcwd()
         print("Project path:", self.project_path)
 
-        self.image1 = cv2.imread(os.path.join("Assets", "layout.png"))
+        self.current_image_path = os.path.join("Assets", "Select Image.png")
+        self.image1 = cv2.imread(self.current_image_path)
         self.polygons = []
         self.canvas_image = None
         self.pillar_image = None
@@ -204,6 +205,9 @@ class Window:
         self.update_image()
 
     def find_polygons(self, image, canny_threshold1=50, canny_threshold2=150, epsilon_factor=0.01, min_vertex_distance=0):
+        if self.current_image_path == os.path.join("Assets", "Select Image.png"):
+            return []
+
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         edges = cv2.Canny(blurred, canny_threshold1, canny_threshold2)
@@ -300,6 +304,7 @@ class Window:
 
     def select_image(self, path):
         if os.path.exists(path):
+            self.current_image_path = path
             self.image1 = cv2.imread(path)
             self.update_image()
 
@@ -350,6 +355,8 @@ class Window:
 
             self.populate_select_menu()
 
+            self.image1 = cv2.imread(self.current_image_path)
+
 
     def open_project(self):
         folder_path = filedialog.askdirectory(title="Open Project Folder")
@@ -367,10 +374,13 @@ class Window:
                 if f.lower().endswith(('.png', '.jpg'))
             ]
             if image_files:
+                self.current_image_path = image_files[0]
                 self.image1 = cv2.imread(image_files[0])
                 self.update_image()
             
             self.populate_select_menu()
+        else:
+            self.image1 = cv2.imread(self.current_image_path)
 
     def save_outline(self):
         self.save_polygons(pillars=False)
@@ -379,6 +389,23 @@ class Window:
         self.save_polygons(pillars=True)
 
     def mesh_files(self):
+        # Check if the data folder exists with border.dat and pillars.dat
+        data_folder_path = self._get_data_folder_path()
+        if not os.path.exists(data_folder_path):
+            messagebox.showerror("Error", "No vertices found. Please save the border and pillars first.")
+            return
+        
+        pillar_file = os.path.join(data_folder_path, PILLAR_VERTEX_FILE_NAME)
+        border_file = os.path.join(data_folder_path, BORDER_VERTEX_FILE_NAME)
+
+        if not os.path.exists(pillar_file):
+            messagebox.showerror("Error", "No pillars found. Please save the pillars first.")
+            return
+        
+        if not os.path.exists(border_file):
+            messagebox.showerror("Error", "No border found. Please save the border first.")
+            return
+
         mesher = Mesher(self.project_path)
         dialog = TriangleSizeDialog(self.root, title="Mesh Triangle Size Input")
         max_area = dialog.triangle_size
@@ -392,4 +419,7 @@ class Window:
         plotter.plot_mesh(plotter.read_mesh_data())
 
 if __name__ == "__main__":
-    Window()
+    try:
+        Window()
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred while running the application.\n{e}")
