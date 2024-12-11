@@ -153,7 +153,6 @@ class Mesher:
 
             # Create text files for each hole
             hole_files = [open(os.path.join(mesh_dir, f"{PILLAR_OUTPUT_FILENAME_START}{i+1}.{ELEMENT_FILE_EXT}"), "a") for i in range(len(holes))]
-            print("Something should be big", len(hole_files))
             hole_plot_files = [open(os.path.join(plot_dir, f"{PILLAR_OUTPUT_FILENAME_START}{i+1}.{PLOT_FILE_EXT}"), "a") for i in range(len(holes))]
             mined_file = open(os.path.join(mesh_dir, f"{MINED_OUTPUT_FILENAME_START}1.{ELEMENT_FILE_EXT}"), "a")
             mined_plot_file = open(os.path.join(plot_dir, f"{MINED_OUTPUT_FILENAME_START}1.{PLOT_FILE_EXT}"), "a")

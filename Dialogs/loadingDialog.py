@@ -38,10 +38,8 @@ class MeshLoader:
     def cancel_all(self):
         """Handle cancelation of all threads and close the loading screen."""
         print("Cancel button clicked. Stopping all processes.")
-        print(threading.enumerate())
         self.stop_event.set()  # Signal all threads to stop
         self.cleanup()
-        print(threading.enumerate())
 
     def cleanup(self):
         """Cleanup resources and close the loading screen."""

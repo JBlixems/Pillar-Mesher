@@ -334,7 +334,6 @@ class PolyMesh:
         grid_max_y = dialog.grid_max_y
         
         if grid_max_x is None or grid_max_y is None:
-            print("Failed to get x and y grid values")
             return 
         
         if not os.path.exists(self._get_data_folder_path()):
